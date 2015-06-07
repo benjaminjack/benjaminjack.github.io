@@ -43,6 +43,13 @@ p {
 	margin: 1.5em 0 1.5em 0;
 }
 
+img#headshot {
+	display: block;
+	float: left;
+	margin-right: 1em;
+	margin-bottom: 1em;
+}
+
 h1#name {
     text-transform: uppercase;
     font-weight: lighter;
@@ -63,7 +70,7 @@ ul#navigation {
 	font-weight: lighter;
 	list-style: none;
 	padding: 0;
-	margin: 0;
+	margin: 0 0 1em 0;
 
 }
 
