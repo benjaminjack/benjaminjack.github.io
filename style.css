@@ -15,8 +15,13 @@ body {
 }
 
 @media (min-width: 600px) {
-	
-	font-size: 30pt;
+	body {
+		font-size: 30pt;
+	}
+	img#headshot {
+		display: block;
+		float: none;
+	}
 }
 
 a {
