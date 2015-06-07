@@ -125,8 +125,12 @@ a.red:hover {
 		margin: none;
 	}
 	
-	img#headshot {
+	p {
 		width: 100%;
+	}
+	
+	img#headshot {
+		float: middle;
 		margin: 0;
 		display: block;
 		float: none;
