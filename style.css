@@ -118,9 +118,6 @@ a.red:hover {
 }
 
 @media (min-width: 600px) {
-	body {
-		font-size: 30pt;
-	}
 	img#headshot {
 		display: block;
 		float: none;
