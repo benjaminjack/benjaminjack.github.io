@@ -26,7 +26,7 @@ div#wrapper {
 }
 
 div#content {
-	padding: 0.7em;
+	padding: 0 0.7em 0 0.7em;
 	font-family: georgia, times, serif;
 	line-height: 1.5em;
 	width: 100%;
