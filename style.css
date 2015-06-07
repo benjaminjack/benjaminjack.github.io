@@ -118,11 +118,13 @@ a.red:hover {
 }
 
 @media (max-width: 600px) {
-	p {
+	div#content {
 		font-size: 30pt;
+		line-height: 35pt;
 		width: 100%;
 	}
 	img#headshot {
+		width: 100%;
 		display: block;
 		float: none;
 	}
