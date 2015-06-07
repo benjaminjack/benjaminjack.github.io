@@ -1,0 +1,93 @@
+@font-face {
+    font-family: 'Raleway';
+    font-style: normal;
+    font-weight: 400;
+    src: local("Raleway"), url(http://themes.googleusercontent.com/static/fonts/raleway/v6/IczWvq5y_Cwwv_rBjOtT0w.woff) format("woff")
+}
+
+body {
+	font-family: Raleway, helvetica;
+	font-size: 14pt;
+	margin: 0;
+	padding: 0;
+	background: white url("img/pymol.jpg") no-repeat 90% top;
+	background-size: 700px;
+}
+
+a {
+	text-decoration: none;
+}
+
+div#wrapper {
+	width: 50em;
+	margin: 0 auto 0 auto;
+	padding: 0;
+}
+
+div#content {
+	margin: 0.5em;
+	font-family: georgia, times, serif;
+}
+
+h1#name {
+    text-transform: uppercase;
+    font-weight: lighter;
+    font-size: 3.5em;
+    padding: 0.2em;
+    letter-spacing: 0.02em;
+    margin: 2.1em auto 0 0;
+    background-color: white;
+    display: inline-block;
+
+}
+
+ul#navigation {
+	font-size: 3em;
+	letter-spacing: 0.02em;
+	font-weight: lighter;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+
+}
+
+ul#navigation li a {
+	padding: 0.1em;
+	margin: 0.1em;
+}
+
+.red {
+	color: #ED2B27;
+}
+
+a.red:hover {
+	color: white;
+	background-color: #ED2B27;
+}
+
+.orange {
+	color: #E57124;
+}
+
+.orange:hover {
+	color: white;
+	background-color: #E57124;
+}
+
+.green {
+	color: #66BC45;
+}
+
+.green:hover {
+	color: white;
+	background-color: #66BC45;
+}
+
+.blue {	
+	color: #2BBAA2;
+}
+
+.blue:hover {
+	color: white;
+	background-color: #2BBAA2;
+}
