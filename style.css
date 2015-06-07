@@ -7,7 +7,7 @@
 
 body {
 	font-family: Raleway, helvetica;
-	font-size: 1.2em;
+	font-size: 14pt;
 	margin: 0;
 	padding: 0;
 	background: white url("img/pymol.jpg") no-repeat 90% top;
@@ -117,7 +117,10 @@ a.red:hover {
 	background-color: #2BBAA2;
 }
 
-@media (min-width: 600px) {
+@media (max-width: 600px) {
+	body {
+		font-size: 30pt;
+	}
 	img#headshot {
 		display: block;
 		float: none;
