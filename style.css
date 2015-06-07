@@ -34,6 +34,7 @@ div#content {
 	margin: 0.7em;
 	font-family: georgia, times, serif;
 	line-height: 1.5em;
+	width: 100%;
 }
 
 div#content a {
