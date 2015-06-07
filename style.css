@@ -137,6 +137,10 @@ a.red:hover {
 		padding: 0;
 	}
 	
+	ul#navigation {
+		display: inline-block;
+	}
+	
 	p {
 		width: 100%;
 		margin: 0;
