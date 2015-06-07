@@ -118,6 +118,10 @@ a.red:hover {
 }
 
 @media (max-width: 600px) {
+	div#wrapper {
+		margin: none;
+	}
+	
 	div#content {
 		font-size: 20pt;
 		line-height: 22pt;
