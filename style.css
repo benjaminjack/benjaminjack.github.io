@@ -43,6 +43,7 @@ h1#name {
 
 ul#navigation {
 	font-size: 3em;
+	text-transform: uppercase;
 	letter-spacing: 0.02em;
 	font-weight: lighter;
 	list-style: none;
