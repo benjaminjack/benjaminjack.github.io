@@ -134,9 +134,9 @@ a.red:hover {
 	}
 	
 	img#headshot {
-		float: middle;
-		margin: 0;
+		margin: 0 auto;
 		display: block;
-		float: none;
+		max-height: 200px;
+		max-width: 200px;
 	}
 }
