@@ -120,7 +120,7 @@ a.red:hover {
 @media (max-width: 600px) {
 	div#content {
 		display: block;
-		font-size: 20pt;
+		font-size: 18pt;
 		line-height: 24pt;
 		width: 100%;
 	}
