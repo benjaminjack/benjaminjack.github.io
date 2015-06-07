@@ -118,8 +118,9 @@ a.red:hover {
 }
 
 @media (max-width: 600px) {
-	body {
+	p {
 		font-size: 30pt;
+		width: 100%;
 	}
 	img#headshot {
 		display: block;
