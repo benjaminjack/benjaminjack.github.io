@@ -26,9 +26,9 @@ h1#name {
 	line-height: 1.1em;
 	text-transform: uppercase;
 	font-weight: lighter;
-	padding: 0.2em;
 	letter-spacing: 0.02em;
 	margin: 150px auto .2em 0;
+	padding: 0;
 	background-color: white;
 	background: rgba(255,255,255,0.8);
 	display: inline-block;
@@ -69,8 +69,8 @@ ul#navigation {
 
 ul#navigation li a {
 	text-decoration: none;
-	padding: 0.1em;
-	margin: 0.1em;
+	padding: 0.1em 0 0.1em 0;
+	margin: 0;
 }
 
 .red {
