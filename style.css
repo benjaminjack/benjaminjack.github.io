@@ -11,8 +11,8 @@ body {
 	line-height: 24pt;
 	margin: 0;
 	padding: 0;
-	background: white url("img/pymol.jpg") no-repeat 90% top;
-	background-size: 50%;
+	background: white url("img/pymol.jpg") no-repeat left top;
+	background-size: 70%;
 }
 
 header {
@@ -54,6 +54,7 @@ p {
 }
 
 ul#navigation {
+	font-family: 'Raleway', helvetica;
 	text-transform: uppercase;
 	font-size: 24pt;
 	letter-spacing: 0.02em;
