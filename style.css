@@ -11,7 +11,7 @@ body {
 	line-height: 24pt;
 	margin: 0;
 	padding: 0;
-	background: white url("img/pymol.jpg") no-repeat right top;
+	background: white url("img/pymol.jpg") no-repeat 90% top;
 	background-size: 700px;
 }
 
@@ -51,10 +51,6 @@ div.container {
 
 p {
 	padding: 1.5em 0 1.5em 0;
-}
-
-div#section1 {
-	padding: 0 5% 0 5%;
 }
 
 ul#navigation {
@@ -137,5 +133,7 @@ img#headshot {
 	
 	img#headshot {
 		float: left;
+		margin: 1.5em 1.5em 1.5em;
 	}
+	
 }
