@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Benjamin R. Jack {% if page.title %} - {{ page.title }}{% endif %}</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+	<header>
+		<div class="container">
+			<h1 id="name">Benjamin R. Jack</h1>
+			{% assign current = page.url | downcase | split: '/' %}
+			<ul id="navigation" {% if current[1] == "index.html" | "" %}class="home"{% endif %}>
+				<li><a href="/index.html" class="red">About</a></li>
+				<li><a href="/research.html" {% if current[1] == 'research.html' %}class="orange_active"{% else %}class="orange"{% endif %}>Research</a></li>
+				<li><a href="/cv.html" {% if current[1] == 'cv.html' %}class="green_active"{% else %}class="green"{% endif %}>CV</a></li>
+				<li><a href="/publications.html" {% if current[1] == 'publications.html' %}class="blue_active"{% else %}class="blue"{% endif %}>Publications</a></li>
+			</ul>
+		</div>
+	</header>
+	<div class="container">

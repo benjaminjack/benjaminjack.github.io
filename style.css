@@ -25,6 +25,11 @@ h1, h2, h3 {
 	text-transform: uppercase;
 }
 
+h2 {
+	font-size: 28pt;
+	margin: 1em 0;
+}
+
 h3 {
 	font-size: 24pt;
 	margin: 1em 0;
@@ -70,7 +75,7 @@ div.container {
 	margin: auto;
 }
 
-ul#navigation {
+ul#navigation.home, ul#navigation {
 	font-family: 'Raleway', helvetica;
 	text-transform: uppercase;
 	font-size: 30pt;
@@ -83,9 +88,9 @@ ul#navigation {
 
 }
 
-ul#navigation li a {
+ul#navigation.home li a, ul#navigation li a {
 	text-decoration: none;
-	padding: 0.1em 0 0.1em 0;
+	padding: 0;
 	margin: 0;
 }
 
@@ -102,7 +107,7 @@ a.red:hover {
 	color: #E57124;
 }
 
-.orange:hover {
+.orange:hover, .orange_active {
 	color: white;
 	background-color: #E57124;
 }
@@ -111,7 +116,7 @@ a.red:hover {
 	color: #66BC45;
 }
 
-.green:hover {
+.green:hover, .green_active {
 	color: white;
 	background-color: #66BC45;
 }
@@ -120,7 +125,7 @@ a.red:hover {
 	color: #2BBAA2;
 }
 
-.blue:hover {
+.blue:hover, .blue_active {
 	color: white;
 	background-color: #2BBAA2;
 }
@@ -191,7 +196,23 @@ a#github {
 	}
 	
 	ul#navigation {
+		font-size: 28pt;
+	}
+	
+	ul#navigation.home {
 		font-size: 42pt;
+	}
+	
+	ul#navigation li {
+		display: inline-block;
+		float: left;
+		margin-right: 0.5em;
+	}
+	
+	ul#navigation.home li {
+		display: block;
+		float: none;
+		margin-right: 0;
 	}
 	
 	div.container {

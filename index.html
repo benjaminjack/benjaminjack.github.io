@@ -1,23 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-	<title>Benjamin R. Jack</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" type="text/css" href="style.css">
-</head>
-<body>
-	<header>
-		<div class="container">
-			<h1 id="name">Benjamin R. Jack</h1>
-			<ul id="navigation">
-				<li><a href="" class="red">About</a></li>
-				<li><a href="" class="orange">Research</a></li>
-				<li><a href="" class="green">CV</a></li>
-				<li><a href="" class="blue">Publications</a></li>
-			</ul>
-		</div>
-	</header>
-	<div class="container">
+---
+---
+{% include header.html %}
+
 	<div id="section1">
 			<img id="headshot" src="img/headshot.jpg" alt="Benjamin R. Jack" />
 	</div>
@@ -31,7 +15,5 @@
 				<li><a href="http://www.github.com/benjaminjack" target="_blank" id="github">benjaminjack</a></li>
 			</ul>
 	</div>
-	</div>
 
-</body>
-</html>
+{% include footer.html %}
