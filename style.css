@@ -46,6 +46,7 @@ a:hover {
 
 div.container {
 	max-width: 800px;
+	padding: 0 1em 0 1em;
 	margin: auto;
 }
 
@@ -133,7 +134,7 @@ img#headshot {
 	
 	img#headshot {
 		float: left;
-		margin: 1.5em 1.5em 1.5em;
+		margin: 1.5em 1.5em 1.5em 0;
 	}
 	
 }
