@@ -28,7 +28,7 @@ h1#name {
 	font-weight: lighter;
 	padding: 0.2em;
 	letter-spacing: 0.02em;
-	margin: 150px auto 0 0;
+	margin: 170px auto 0 0;
 	background-color: white;
 	background: rgba(255,255,255,0.8);
 	display: inline-block;
@@ -113,6 +113,7 @@ a.red:hover {
 }
 
 img#headshot {
+	display: block;
 	width: 100%;
 	max-width: 200px;
 	margin: 0 auto 0 auto;
