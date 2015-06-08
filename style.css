@@ -11,7 +11,7 @@ body {
 	line-height: 24pt;
 	margin: 0;
 	padding: 0;
-	background: white url("img/pymol.jpg") no-repeat left top;
+	background: white url("img/pymol.jpg") no-repeat right top;
 	background-size: 70%;
 }
 
@@ -22,7 +22,7 @@ header {
 
 h1#name {
 	font-family: 'Raleway', helvetica;
-	font-size: 24pt;
+	font-size: 30pt;
 	line-height: 1.2em;
 	text-transform: uppercase;
 	font-weight: lighter;
