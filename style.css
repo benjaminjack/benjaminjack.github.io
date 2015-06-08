@@ -27,8 +27,8 @@ h1#name {
 	text-transform: uppercase;
 	font-weight: lighter;
 	letter-spacing: 0.02em;
-	margin: 160px auto .2em -0.1em;
-	padding: 0.1em;
+	margin: 160px auto .2em -0.2em;
+	padding: 0.2em;
 	background-color: white;
 	background: rgba(255,255,255,0.8);
 	display: inline-block;
