@@ -54,7 +54,7 @@ p {
 }
 
 div#section1 {
-	padding: 5%;
+	padding: 0 5% 0 5%;
 }
 
 ul#navigation {
@@ -126,12 +126,12 @@ img#headshot {
 	}
 	
 	h1#name {
-		font-size: 30pt;
+		font-size: 40pt;
 		margin-top: 100px;
 	}
 	
 	ul#navigation {
-		font-size: 30pt;
+		font-size: 40pt;
 	}
 	
 	img#headshot {
