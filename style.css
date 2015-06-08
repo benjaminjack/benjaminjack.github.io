@@ -126,11 +126,12 @@ img#headshot {
 	}
 	
 	h1#name {
-		font-size: 3.5em;
+		font-size: 30pt;
+		margin-top: 100px;
 	}
 	
 	ul#navigation {
-		font-size: 3.5em;
+		font-size: 30pt;
 	}
 	
 	img#headshot {
