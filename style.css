@@ -22,7 +22,7 @@ header {
 
 h1#name {
 	font-family: 'Raleway', helvetica;
-	font-size: 30pt;
+	font-size: 36pt;
 	line-height: 1.2em;
 	text-transform: uppercase;
 	font-weight: lighter;
@@ -115,7 +115,7 @@ a.red:hover {
 img#headshot {
 	width: 100%;
 	max-width: 200px;
-	margin: 0 auto;
+	margin: 0 auto 0 auto;
 }
 
 @media (min-width: 600px) {
