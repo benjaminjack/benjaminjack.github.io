@@ -132,6 +132,10 @@ img#headshot {
 		font-size: 42pt;
 	}
 	
+	div.container {
+		padding: 0 1em 0 1em;
+	}
+	
 	img#headshot {
 		float: left;
 		margin: 1.5em 1.5em 1.5em 0;
