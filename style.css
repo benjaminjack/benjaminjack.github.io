@@ -27,7 +27,7 @@ h1#name {
 	text-transform: uppercase;
 	font-weight: lighter;
 	letter-spacing: 0.02em;
-	margin: 150px auto .2em 0;
+	margin: 160px auto .2em 0;
 	background-color: white;
 	background: rgba(255,255,255,0.8);
 	display: inline-block;
@@ -45,7 +45,7 @@ a:hover {
 
 div.container {
 	max-width: 800px;
-	padding: 0 .5em 0 .5em;
+	padding: 0 .4em 0 .4em;
 	margin: auto;
 }
 
@@ -124,7 +124,7 @@ img#headshot {
 	
 	h1#name {
 		font-size: 40pt;
-		margin-top: 120px;
+		margin-top: 150px;
 	}
 	
 	ul#navigation {
