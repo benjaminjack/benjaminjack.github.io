@@ -27,7 +27,7 @@ h1, h2, h3 {
 
 h3 {
 	font-size: 24pt;
-	margin: 0.5em 0;
+	margin: 1em 0;
 }
 
 h1#name {
@@ -138,13 +138,44 @@ ul#contact {
 	padding: 0;
 }
 
+ul#contact li {
+	margin: .5em 0 .5em 0;
+}
+
 a#twitter {
 	background: transparent url('img/twitter.png') no-repeat left center;
-	background-size: 40px;
+	background-size: 28px;
 	padding: 0 0 0 40px;
 	display: inline-block;
-	line-height: 40px;
-	height: 40px;
+	line-height: 28px;
+	height: 28px;
+}
+
+a#linkedin {
+	background: transparent url('img/linkedin.png') no-repeat left center;
+	background-size: 28px;
+	padding: 0 0 0 40px;
+	display: inline-block;
+	line-height: 28px;
+	height: 28px;
+}
+
+a#email {
+	background: transparent url('img/email.png') no-repeat left center;
+	background-size: 28px;
+	padding: 0 0 0 40px;
+	display: inline-block;
+	line-height: 28px;
+	height: 28px;
+}
+
+a#github {
+	background: transparent url('img/github.png') no-repeat left center;
+	background-size: 28px;
+	padding: 0 0 0 40px;
+	display: inline-block;
+	line-height: 28px;
+	height: 28px;
 }
 
 @media (min-width: 600px) {
