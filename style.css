@@ -17,6 +17,7 @@ body {
 
 header {
 	font-family: 'Raleway', helvetica;
+	line-height: auto;
 	margin: 0;
 	padding: 0;
 }
