@@ -28,7 +28,6 @@ h1#name {
 	font-weight: lighter;
 	letter-spacing: 0.02em;
 	margin: 150px auto .2em 0;
-	padding: 0;
 	background-color: white;
 	background: rgba(255,255,255,0.8);
 	display: inline-block;
@@ -46,7 +45,7 @@ a:hover {
 
 div.container {
 	max-width: 800px;
-	padding: 0 1em 0 1em;
+	padding: 0 .5em 0 .5em;
 	margin: auto;
 }
 
