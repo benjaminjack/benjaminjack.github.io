@@ -37,7 +37,7 @@ h1#name {
 	text-transform: uppercase;
 	font-weight: lighter;
 	letter-spacing: 0.02em;
-	margin: 160px auto .2em -0.2em;
+	margin: 160px auto .7em -0.2em;
 	padding: 0 0.2em 0 0.2em;
 	background-color: white;
 	background: rgba(255,255,255,0.8);
@@ -47,7 +47,7 @@ h1#name {
 
 hr {
 	background-color: lightgray;
-	height: 2px;
+	height: 1px;
 	border: none;
 }
 
@@ -66,7 +66,7 @@ p {
 
 div.container {
 	max-width: 800px;
-	padding: 0 .4em 0 .4em;
+	padding: 0 .4em 2em .4em;
 	margin: auto;
 }
 
@@ -74,7 +74,7 @@ ul#navigation {
 	font-family: 'Raleway', helvetica;
 	text-transform: uppercase;
 	font-size: 30pt;
-	line-height: 1.2em;
+	line-height: 1.1em;
 	letter-spacing: 0.02em;
 	font-weight: lighter;
 	list-style: none;
@@ -132,12 +132,6 @@ img#headshot {
 	margin: 0 auto 0 auto;
 }
 
-footer .container {
-	clear: left;
-	padding-top: 3em;
-	padding-bottom: 2em;
-}
-
 ul#contact {
 	list-style: none;
 	margin: 0;
@@ -174,9 +168,17 @@ a#twitter {
 		padding-right: 1em;
 	}
 	
-	img#headshot {
+	div#section1 {
+		display: block;
+		padding-top: 1.3em;
+		width: 200px;
 		float: left;
-		margin: 1.5em 1.5em 1.5em 0;
+	}
+	
+	div#section2 {
+		display: block;
+		margin-left: 200px;
+		padding-left: 2em;
 	}
 	
 }
