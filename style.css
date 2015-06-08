@@ -20,6 +20,16 @@ header {
 	padding: 0;
 }
 
+h1, h2, h3 {
+	font-family: 'Raleway', helvetica;
+	text-transform: uppercase;
+}
+
+h3 {
+	font-size: 24pt;
+	margin: 0.5em 0;
+}
+
 h1#name {
 	font-family: 'Raleway', helvetica;
 	font-size: 30pt;
@@ -35,6 +45,12 @@ h1#name {
 
 }
 
+hr {
+	background-color: lightgray;
+	height: 2px;
+	border: none;
+}
+
 a {
 	text-decoration: underline;
 	color: #E57124;
@@ -44,14 +60,14 @@ a:hover {
 	text-decoration: none;
 }
 
+p {
+	padding: 1.3em 0 1.3em 0;
+}
+
 div.container {
 	max-width: 800px;
 	padding: 0 .4em 0 .4em;
 	margin: auto;
-}
-
-p {
-	padding: 1.3em 0 1.3em 0;
 }
 
 ul#navigation {
@@ -116,6 +132,27 @@ img#headshot {
 	margin: 0 auto 0 auto;
 }
 
+footer .container {
+	clear: left;
+	padding-top: 3em;
+	padding-bottom: 2em;
+}
+
+ul#contact {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+a#twitter {
+	background: transparent url('img/twitter.png') no-repeat left center;
+	background-size: 40px;
+	padding: 0 0 0 40px;
+	display: inline-block;
+	line-height: 40px;
+	height: 40px;
+}
+
 @media (min-width: 600px) {
 	
 	body {
@@ -133,7 +170,8 @@ img#headshot {
 	}
 	
 	div.container {
-		padding: 0 1em 0 1em;
+		padding-left: 1em;
+		padding-right: 1em;
 	}
 	
 	img#headshot {
