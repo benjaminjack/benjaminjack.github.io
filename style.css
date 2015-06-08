@@ -12,7 +12,7 @@ body {
 	margin: 0;
 	padding: 0;
 	background: white url("img/pymol.jpg") no-repeat right top;
-	background-size: 70%;
+	background-size: 700px;
 }
 
 header {
@@ -61,6 +61,7 @@ ul#navigation {
 	font-family: 'Raleway', helvetica;
 	text-transform: uppercase;
 	font-size: 30pt;
+	line-height: 1.2em;
 	letter-spacing: 0.02em;
 	font-weight: lighter;
 	list-style: none;
@@ -109,6 +110,10 @@ a.red:hover {
 .blue:hover {
 	color: white;
 	background-color: #2BBAA2;
+}
+
+img#headshot {
+	margin: 0 auto;
 }
 
 @media (min-width: 600px) {
