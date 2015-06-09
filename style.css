@@ -42,7 +42,7 @@ h1#name {
 	text-transform: uppercase;
 	font-weight: lighter;
 	letter-spacing: 0.02em;
-	margin: 7px -0.2em .7em -0.2em;
+	margin: 10px -0.2em .7em -0.2em;
 	padding: 0 0.2em 0 0.2em;
 	background-color: white;
 	background: rgba(255,255,255,0.9);
@@ -96,6 +96,7 @@ div#navigation.home ul, div#navigation ul {
 div#navigation.home ul li, div#navigation ul li {
 	background-color: white;
 	padding: 0.1em 0 0.1em 0;
+	margin: 0 -0.2em 0 -0.2em;
 	display: inline-block;
 	float: left;
 	clear: left;
@@ -104,7 +105,7 @@ div#navigation.home ul li, div#navigation ul li {
 
 div#navigation.home ul li a, div#navigation ul li a {
 	text-decoration: none;
-	margin: 0 -0.2em 0 -0.2em;
+	margin: 0;
 	padding: 0 0.2em 0 0.2em;
 }
 
