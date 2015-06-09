@@ -10,7 +10,7 @@ body {
 	font-size: 16pt;
 	line-height: 24pt;
 	margin: 0;
-	padding: 0;
+	padding: 0 0 3em 0;
 	background: white url("img/pymol.jpg") no-repeat 90% top;
 	background-size: 700px;
 }
@@ -75,8 +75,12 @@ p {
 
 div.container {
 	max-width: 800px;
-	padding: 0 .4em 2em .4em;
+	padding: 0 .4em 0 .4em;
 	margin: auto;
+}
+
+div#navigation.home {
+	padding-bottom: 2em;
 }
 
 div#navigation.home ul, div#navigation ul {
@@ -205,17 +209,17 @@ a#github {
 		line-height: 1.5em;
 	}
 	
-	div#navigation {
+	div#navigation ul {
 		font-size: 28pt;
 	}
 	
 	div#navigation.home {
 		font-size: 42pt;
+		padding-bottom: 1.5em;
 	}
 	
 	div#navigation ul li {
 		display: inline-block;
-		float: left;
 		clear: none;
 		margin-right: 0.5em;
 	}
