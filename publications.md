@@ -3,7 +3,7 @@ title: Publications
 layout: default
 ---
 
-## Publications
+##<a name="pubs" /> Publications
 
 ### 2015
 _Coming soon._
