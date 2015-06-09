@@ -3,7 +3,7 @@
 <head>
 	<title>Benjamin R. Jack {% if page.title %} - {{ page.title }}{% endif %}</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" type="text/css" href="style.css">
+	<link rel="stylesheet" type="text/css" href="{{ site.url }}/style.css">
 </head>
 <body>
 	<header>
@@ -12,7 +12,7 @@
 			<h1 id="name">Benjamin R. Jack</h1>
 			<ul>
 				<li><a href="/index.html#section1" class="red">About</a></li>
-				<li><a href="/research.html" {% if current[1] == 'research.html' %}class="orange_active"{% else %}class="orange"{% endif %}>Research</a></li>
+				<li><a href="/blog.html" {% if current[1] == 'blog.html' %}class="orange_active"{% else %}class="orange"{% endif %}>Blog</a></li>
 				<li><a href="/cv.html" {% if current[1] == 'cv.html' %}class="green_active"{% else %}class="green"{% endif %}>CV</a></li>
 				<li><a href="/publications.html" {% if current[1] == 'publications.html' %}class="blue_active"{% else %}class="blue"{% endif %}>Publications</a></li>
 			</ul>
