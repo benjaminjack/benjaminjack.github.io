@@ -1,0 +1,19 @@
+---
+title: Blog
+layout: default
+---
+
+<h2>Welcome To My Blog</h2>
+<p>I write about computational biology, bioinformatics, programming, graduate school, and other things I find interesting.</p>
+
+<ul class="bloglist">
+<hr />
+  {% for post in site.posts %}
+    <li>
+      <h4><a href="{{ post.url }}">{{ post.title }}</a></h4>
+    	{{ post.excerpt | remove: '<p>' | remove: '</p>' | truncatewords 10 }} 
+     <span class="date">{{ post.date | date_to_string }}</span>
+    </li>
+    <hr />
+  {% endfor %}
+</ul>

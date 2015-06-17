@@ -1,0 +1,11 @@
+---
+---
+{% assign current = 'blog.html' %}
+{% include header.html %}
+<h2 class="blog">{{ page.title }}</h2>
+<span class="date">{{ page.date | date_to_string }} | {{ page.author }}</span>
+<hr />
+{{ page.content | markdownify }}
+<hr />
+<p><a href="{{ site.url }}/blog.html">Back to all entries.</a></p>
+{% include footer.html %}

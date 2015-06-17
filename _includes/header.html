@@ -1,20 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Benjamin R. Jack {% if page.title %} - {{ page.title }}{% endif %}</title>
+	<title>{% if page.title %}{{ page.title }} - {% endif %}Benjamin R. Jack</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta charset="utf-8">
 	<link rel="stylesheet" type="text/css" href="{{ site.url }}/style.css">
 </head>
 <body>
 	<header>
+		{% if current == nil %}
 		{% assign current = page.url | downcase | split: '/' %}
-		<div {% if current[1] == "index.html" | current[1] == "" %}class="container home"{% else %}class="container"{% endif %} id="navigation">
-			<h1 id="name">Benjamin R. Jack</h1>
+		{% assign current = current[1] %}
+		{% endif %}
+		<div {% if current == "index.html" | current == "" %}class="container home"{% else %}class="container"{% endif %} id="navigation">
+			<h1 id="name"><a href="/">Benjamin R. Jack</a></h1>
 			<ul>
 				<li><a href="/index.html#section1" class="red">About</a></li>
-				<li><a href="/blog.html" {% if current[1] == 'blog.html' %}class="orange_active"{% else %}class="orange"{% endif %}>Blog</a></li>
-				<li><a href="/cv.html" {% if current[1] == 'cv.html' %}class="green_active"{% else %}class="green"{% endif %}>CV</a></li>
-				<li><a href="/publications.html" {% if current[1] == 'publications.html' %}class="blue_active"{% else %}class="blue"{% endif %}>Publications</a></li>
+				<li><a href="/blog.html" {% if current == 'blog.html' %}class="orange_active"{% else %}class="orange"{% endif %}>Blog</a></li>
+				<li><a href="/cv.html" {% if current == 'cv.html' %}class="green_active"{% else %}class="green"{% endif %}>CV</a></li>
+				<li><a href="/research.html" {% if current == 'research.html' %}class="blue_active"{% else %}class="blue"{% endif %}>Research</a></li>
 			</ul>
 		</div>
 	</header>
