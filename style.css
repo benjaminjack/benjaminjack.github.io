@@ -286,6 +286,10 @@ ul.cv li {
 	text-indent: -2em;
 }
 
+dl.cv {
+	overflow: hidden;
+}
+
 dl.cv dt {
 	font-style: italic;
 }
