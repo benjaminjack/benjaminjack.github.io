@@ -299,6 +299,11 @@ dl.cv dd {
 	margin: 0 0 0.5em;
 }
 
+div.post img {
+	margin-left: auto;
+	margin-right: auto;
+}
+
 @media (min-width: 600px) {
 	
 	body {
@@ -352,6 +357,11 @@ dl.cv dd {
 	
 	dl.cv dd {
 		padding-left: 6em;
+	}
+	
+	div.post img {
+		float: left;
+		margin: 0 2em 2em 0;
 	}
 	
 }
