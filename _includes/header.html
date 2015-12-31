@@ -17,11 +17,9 @@
 </head>
 <body>
 	<header>
-		{% if current == nil %}
 		{% assign current = page.url | downcase | split: '/' %}
 		{% assign current = current[1] %}
-		{% endif %}
-		<div {% if current == "index.html" | current == "" %}class="container home"{% else %}class="container"{% endif %} id="navigation">
+		<div {% if current == "index.html" or current == nil %}class="container home"{% else %}class="container"{% endif %} id="navigation">
 			<h1 id="name"><a href="/">Benjamin R. Jack</a></h1>
 			<ul>
 				<li><a href="/index.html#section1" class="red">About</a></li>

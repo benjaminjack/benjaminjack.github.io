@@ -1,9 +1,6 @@
-{% if current == nil %}
-{% assign current = page.url | downcase | split: '/' %}
-{% assign current = current[1] %}
-{% endif %}
-{% if current == "index.html" | current == "" %} {% else %}{% include contact.html %}{% endif %}
-		
+
+{% if current == "index.html" or current == nil %} {% else %}{% include contact.html %}{% endif %}
+
 	</div>
 
 </body>
