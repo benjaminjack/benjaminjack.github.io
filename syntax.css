@@ -14,7 +14,7 @@ code {
 .highlight code {
     background: none;
     border: none;
-    padding: none;
+    padding: 0;
 }
 
 .highlight pre {
