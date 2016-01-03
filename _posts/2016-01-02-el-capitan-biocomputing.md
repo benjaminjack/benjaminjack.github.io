@@ -11,7 +11,7 @@ I recently wiped my Macbook Pro and reinstalled Mac OS X El Capitan. I did this 
 
 Head over to the Mac App Store and download the latest version of Xcode. It is free and provided by Apple. Xcode is quite larger (~2GB), but contains the necessary tools for compiling code and installing other software. By default, Xcode cannot be accessed from the command line, so we must install Xcode Command Line Tools with the following command in the Terminal:
 
-{% highlight text %}
+{% highlight bash %}
 xcode-select --install
 {% endhighlight %}
 
@@ -21,25 +21,25 @@ Follow the prompts and accept the license agreement.
 
 Homebrew is a package manager for OS X. I prefer Homebrew to MacPorts because of a variety of issues that I've had with MacPorts. The rest of this guide will assume that you have Homebrew installed, though you could just as easily use MacPorts to install git, Python, and R. To install Homebrew, run this command and follow the prompts:
 
-```bash
+{% highlight bash %}
 ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-```
+{% endhighlight %}
 
 #### 3.  Install git for version control
 
 After Homebrew has been installed, installing other software is relatively simple. Git is a version control system commonly used with Github. Xcode tends to come with older versions of git and Apple is slow to keep git up-to-date. Rather than overwrite the system git installation, we'll install a new version of git via Homebrew:
 
-```bash
+{% highlight bash %}
 brew install git
-```
+{% endhighlight %}
 
 #### 4.  Install Python
 
 Again, like git, the default Python installation in OS X also tends to be outdated. Let's install a separate, newer version of Python 2.7.x:
 
-```bash
+{% highlight bash %}
 brew install python
-```
+{% endhighlight %}
 
 If you would like to install Python 3 instead, replace `python` in the above command with `python3`. Both Python 2 and Python 3 can be installed concurrently. Homebrew's version of Python comes with pip, a package manager specifically designed for Python libraries. Use pip to install a few Python libraries:
 
@@ -51,32 +51,33 @@ pip install pandas # Dataframes in Python!
 
 One of the most commonly used biocomputing Python libraries is Biopython. We'll install that next, again using pip:
 
-```bash
+{% highlight bash %}
 pip install biopython
-```
+{% endhighlight %}
+
 IPython Notebook, another popular biocomputing tool, is now a part of the Jupyter Project. Installing Jupyter via pip will install IPython Notebook:
 
-```bash
+{% highlight bash %}
 pip install jupyter
-```
+{% endhighlight %}
 
 #### 5.  Install R
 
 Run the following commands to install R:
 
-```bash
+{% highlight bash %}
 brew tap homebrew/science
 brew install R
-```
+{% endhighlight %}
 
 I also installed a few of Hadley Wickham's packages:
 
-```bash
+{% highlight bash %}
 R # Launch R
 > install.packages("ggplot2")
 > install.packages("dplyr")
 > install.packages("tidyr")
-```
+{% endhighlight %}
 
 #### 6.  Install RStudio for R development
 

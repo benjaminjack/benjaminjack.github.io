@@ -1,28 +1,27 @@
 /* syntax.css */
 
+code {
+    background-color: #f8f8f8; border: 1px solid #ccc; padding: 3px 5px; border-radius: 3px; }
+}
+
 /* to make lines scroll instead of wrap */
 /* from http://stackoverflow.com/a/23393920 */
 
-div.highlighter-rouge {
-    margin: 1.3em 0;
-}
-
-code.highlighter-rouge {
-    background-color: #f8f8f8;
-    border: 1px solid #ccc;
-    padding: 3px 5px;
-    border-radius: 3px;
-}
-
-.highlighter-rouge pre code * {
+.highlight pre code * {
   white-space: nowrap;    // this sets all children inside to nowrap
 }
 
-.highlighter-rouge pre {
+.highlight code {
+    background: none;
+    border: none;
+    padding: none;
+}
+
+.highlight pre {
   overflow-x: auto;       // this sets the scrolling in x
 }
 
-.highlighter-rouge pre code {
+.highlight pre code {
   white-space: pre;       // forces <code> to respect <pre> formatting
 }
 
