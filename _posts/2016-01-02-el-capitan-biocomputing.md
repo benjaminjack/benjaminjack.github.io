@@ -11,7 +11,7 @@ I recently wiped my Macbook Pro and reinstalled Mac OS X El Capitan. I did this 
 
 Head over to the Mac App Store and download the latest version of Xcode. It is free and provided by Apple. Xcode is quite larger (~2GB), but contains the necessary tools for compiling code and installing other software. By default, Xcode cannot be accessed from the command line, so we must install Xcode Command Line Tools with the following command in the Terminal:
 
-```shell
+```ruby
 xcode-select --install
 ```
 
