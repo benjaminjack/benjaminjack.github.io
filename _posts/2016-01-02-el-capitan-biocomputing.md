@@ -11,9 +11,9 @@ I recently wiped my Macbook Pro and reinstalled Mac OS X El Capitan. I did this 
 
 Head over to the Mac App Store and download the latest version of Xcode. It is free and provided by Apple. Xcode is quite larger (~2GB), but contains the necessary tools for compiling code and installing other software. By default, Xcode cannot be accessed from the command line, so we must install Xcode Command Line Tools with the following command in the Terminal:
 
-```ruby
+{% highlight text %}
 xcode-select --install
-```
+{% endhighlight %}
 
 Follow the prompts and accept the license agreement.
 
@@ -43,11 +43,11 @@ brew install python
 
 If you would like to install Python 3 instead, replace `python` in the above command with `python3`. Both Python 2 and Python 3 can be installed concurrently. Homebrew's version of Python comes with pip, a package manager specifically designed for Python libraries. Use pip to install a few Python libraries:
 
-```bash
+{% highlight bash %}
 pip install numpy # Vectors and matrices in Python
 pip install scipy # Other scientific computing tools
 pip install pandas # Dataframes in Python!
-```
+{% endhighlight %}
 
 One of the most commonly used biocomputing Python libraries is Biopython. We'll install that next, again using pip:
 
