@@ -70,7 +70,7 @@ brew tap homebrew/science
 brew install R
 {% endhighlight %}
 
-I also installed a few of Hadley Wickham's packages:
+You will probably also want to install a few of Hadley Wickham's packages:
 
 {% highlight bash %}
 R # Launch R
