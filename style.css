@@ -37,7 +37,8 @@ h3 {
 
 h4 {
 	font-size: 20pt;
-	margin: .5em 0 ;
+	margin: 1.3em 0 0 0;
+    font-weight: bold;
 }
 
 h1#name {
@@ -152,7 +153,7 @@ a.red:hover {
 	background-color: #66BC45;
 }
 
-.blue {	
+.blue {
 	color: #2BBAA2;
 }
 
@@ -185,7 +186,7 @@ ul#contact.foot li {
 
 .foot {
 	font-size: 12pt;
-} 
+}
 
 ul#contact.foot li a {
 	background-size: 18px;
@@ -305,63 +306,63 @@ div.post img {
 }
 
 @media (min-width: 600px) {
-	
+
 	body {
 		font-size: 14pt;
 		line-height: 1.8em;
 	}
-	
+
 	div#navigation ul {
 		font-size: 28pt;
 	}
-	
+
 	div#navigation.home {
 		font-size: 42pt;
 		padding-bottom: 0.8em;
 	}
-	
+
 	div#navigation ul li {
 		display: inline-block;
 		clear: none;
 		margin-right: 0.5em;
 	}
-	
+
 	h1#name {
 		font-size: 42pt;
 		margin-top: 160px;
 	}
-	
+
 	div.container {
 		padding-left: 5%;
 		padding-right: 5%;
 	}
-	
+
 	div#section1 {
 		display: block;
 		padding-top: 1.3em;
 		width: 200px;
 		float: left;
 	}
-	
+
 	div#section2 {
 		display: block;
 		margin-left: 200px;
 		padding-top: 0.1em;
 		padding-left: 2em;
 	}
-	
+
 	dl.cv dt {
 		float: left;
 		width: 6em;
 	}
-	
+
 	dl.cv dd {
 		padding-left: 6em;
 	}
-	
+
 	div.post img {
 		float: left;
 		margin: 0 2em 2em 0;
 	}
-	
+
 }
