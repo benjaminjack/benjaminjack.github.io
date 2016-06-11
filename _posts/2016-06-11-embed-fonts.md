@@ -10,7 +10,7 @@ I use R with ggplot2 to create publication-ready figures in PDF format. Using a 
 
 The plot on the left appears exactly as it should, with all the type rendered with the Helvetica typeface. The plot on the right is a screenshot of a PDF rendered on a system that did not have Helvetica installed. Since R did not embed the fonts into the PDF, this system substitutes Helvetica with the closest font that it can find. The substitution is markedly different from the original Helvetica. Without embedded fonts, the same PDF renders very differently on different machines. Frustratingly, the systems that lack standard fonts like Helvetica tend to be archaic journal publishing systems. Overleaf also lacks the basic fonts to render PDFs correctly. To guarantee that PDFs render exactly the same across a variety of systems, we must embed the fonts into the PDF itself.
 
-I wrote a short python script (adapted from [here]()) that scans the working directory for PDFs, opens them in Preview, and re-saves them under the original filename. These re-saved PDF files have all fonts embedded. This script will only work on OS X, because it depends on OS X APIs.
+I wrote a short python script (adapted from [here](https://discussions.apple.com/message/28994467#message28994467)) that scans the working directory for PDFs, opens them in Preview, and re-saves them under the original filename. These re-saved PDF files have all fonts embedded. This script will only work on OS X, because it depends on OS X APIs.
 
 {% highlight python %}
 #!/usr/bin/python
