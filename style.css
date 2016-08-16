@@ -7,8 +7,8 @@
 
 body {
 	font-family: georgia, times, serif;
-	font-size: 16pt;
-	line-height: 24pt;
+	font-size: 14pt;
+	line-height: 20pt;
 	margin: 0;
 	padding: 0 0 3em 0;
 	background: white url("img/pymol.jpg") no-repeat 90% top;
