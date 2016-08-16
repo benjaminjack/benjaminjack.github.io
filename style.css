@@ -10,7 +10,7 @@ body {
 	font-size: 14pt;
 	line-height: 20pt;
 	margin: 0;
-	padding: 0 0 3em 0;
+	padding: 0 0.5em 3em 0.5em;
 	background: white url("img/pymol.jpg") no-repeat 90% top;
 	background-size: 700px;
 }
@@ -308,7 +308,7 @@ div.post img {
 @media (min-width: 600px) {
 
 	body {
-		font-size: 14pt;
+		font-size: 12pt;
 		line-height: 1.8em;
 	}
 
