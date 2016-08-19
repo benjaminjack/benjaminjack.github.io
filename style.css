@@ -309,7 +309,7 @@ div.altmetric-embed {
 	display: inline-block;
 	margin: 0;
 	padding: 0;
-	text-indent: 2em;
+	text-indent: 0;
 }
 
 @media (min-width: 600px) {
