@@ -307,6 +307,9 @@ div.post img {
 
 div.altmetric-embed, div.altmetric-embed a, div.altmetric-embed img {
 	display: inline-block;
+	margin: 0;
+	padding: 0;
+	text-indent: none;
 }
 
 @media (min-width: 600px) {
