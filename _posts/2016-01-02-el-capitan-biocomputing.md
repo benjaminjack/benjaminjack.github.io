@@ -5,7 +5,7 @@ layout: post
 excerpt: I recently wiped my Macbook Pro and reinstalled Mac OS X El Capitan. I did this for several reasons, but mostly because I was thoroughly frustrated with MacPorts and wanted to switch to Homebrew (more on that later). To cleanly rid my laptop of MacPorts, I started with a fresh copy of El Capitan. This guide describes the steps I took to configure El Capitan for biocomputing.
 ---
 
-**Update:** _After six months of using macOS Sierra, I can state confidently that all instructions discussed below hold true for both El Capitan and Sierra. So feel free to use this guide to set up macOS Sierra for biocomputing._
+**Update (3/26/17):** _After six months of using macOS Sierra, I can state confidently that all instructions discussed below hold true for both El Capitan and Sierra. So feel free to use this guide to set up macOS Sierra for biocomputing._
 
 I recently wiped my Macbook Pro and reinstalled Mac OS X El Capitan. I did this for several reasons, but mostly because I was thoroughly frustrated with MacPorts and wanted to switch to Homebrew (more on that later). To cleanly rid my laptop of MacPorts, I started with a fresh copy of El Capitan. This guide describes the steps I took to configure El Capitan for biocomputing. If you are interested in configuring Yosemite for biocomputing instead, see [this post by Stephanie Spielman](http://sjspielman.org/configure_yosemite_biocomputing/). Many of the following steps for El Capitan were derived from her post.
 
