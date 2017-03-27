@@ -11,7 +11,7 @@ I recently wiped my Macbook Pro and reinstalled Mac OS X El Capitan. I did this 
 
 #### 1.  Install Xcode and Xcode Command Line Tools
 
-~~Head over to the Mac App Store and download the latest version of Xcode. It is free and provided by Apple. Xcode is quite larger (~2GB), but contains the necessary tools for compiling code and installing other software.~~ **Update (3/26/17):**_It is no longer necessary to download the full Xcode IDE from the Mac App Store. You can run the command below to only install Xcode Command Line tools and save yourself some disk space._ By default, Xcode cannot be accessed from the command line, so we must install Xcode Command Line Tools with the following command in the Terminal:
+~~Head over to the Mac App Store and download the latest version of Xcode. It is free and provided by Apple. Xcode is quite larger (~2GB), but contains the necessary tools for compiling code and installing other software.~~ **Update (3/26/17):**_It is no longer necessary to download the full Xcode IDE from the Mac App Store. You can save youreself some disk space and just run the command below to only install Xcode Command Line tools._ By default, Xcode cannot be accessed from the command line, so we must install Xcode Command Line Tools with the following command in the Terminal:
 
 {% highlight bash %}
 xcode-select --install
