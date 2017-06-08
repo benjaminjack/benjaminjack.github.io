@@ -5,8 +5,6 @@ layout: post
 excerpt: None yet...
 ---
 
-- Outline goals
-
 There are several libraries that make interfacing C++ code with Python relatively easy. My favorite is pybind11, which the Rosetta team recently used to rewrite PyRosetta. Pybind11 allows you to write python wrappers for C++ code with minimal boilerplate code. Pybind11 is well-documented and generating a C++-extension module is a breeze. Going from a module to a proper python package, however, takes some more work. In my mind, a python package based on a hybrid Python/C++ code base should include:
 
 - A build system, such as CMake or make
@@ -31,8 +29,6 @@ To start, we'll create a simple `pybind11`-based python module. The module will 
 ```bash
 python_cpp_example/
 ├── CMakeLists.txt  # CMake configuration file
-├── LICENSE
-├── README.md
 ├── build  # build directory for C++ executables
 ├── lib  # external C++ libraries
 ├── python_cpp_example  # source code (python and C++)
@@ -100,8 +96,6 @@ We've now defined two functions in C++, `add` and `subtract`, and written the co
 ```bash
 python_cpp_example/
 ├── CMakeLists.txt
-├── LICENSE
-├── README.md
 ├── build
 ├── lib
 │   └── pybind11-2.1.1
@@ -236,10 +230,136 @@ Now you should be able to run `python3 setup.py develop` from within your packag
 Up until now, I have largely followed along with the `pybind11` tutorial and CMake example repository. Next I will describe how to add unit testing within this set up.
 
 ### Writing python unit tests
-- Python tests
-### Writing C++ unit tests with `catch`
-- C++ tests with catch lib
-### Writing a custom test-runner for `setuptools`
-- Customize setup.py for test running
 
-- Wrap-up and docs coming next
+Next, we'll add python unit tests using python's built-in `unittest` module. Under `tests/` add an empty file called `__init__.py`. This file will be important for `unittest`'s automatic test discovery.
+
+```bash
+python_cpp_example/
+├── CMakeLists.txt
+├── build
+├── lib
+│   └── pybind11-2.1.1
+├── python_cpp_example
+│   ├── bindings.cpp
+│   ├── math.cpp
+│   └── math.hpp
+├── setup.py
+└── tests
+    └── __init__.py
+```
+
+In the same `test/` directory, add a file `math_test.py` with a few simple unit tests.
+
+```python
+import unittest
+import python_cpp_example
+
+class MainTest(unittest.TestCase):
+    def test_add(self):
+        self.assertEqual(python_cpp_example.add(1, 1), 2)
+
+    def test_subtract(self):
+        self.assertEqual(python_cpp_example.subtract(1, 1), 0)
+
+if __name__ == '__main__':
+    unittest.main()
+```
+
+That's all you need for python unit tests! Run `python3 setup.py test` and you should get output that looks like this:
+
+```bash
+> python3 setup.py test
+test_add (tests.math_test.MainTest) ... ok
+test_subtract (tests.math_test.MainTest) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.001s
+
+OK
+```
+
+### Writing C++ unit tests with `catch`
+
+```bash
+wget catch-lib
+tar -xvf catch-lib
+```
+
+`test_main.cpp`:
+```cpp
+#define CATCH_CONFIG_MAIN
+#include <catch.hpp>
+```
+
+`test_math.cpp`
+```cpp
+#include <catch.hpp>
+
+#include "math.hpp"
+
+TEST_CASE("Addition and subtraction")
+{
+    REQUIRE(add(1, 1) == 2);
+    REQUIRE(subtract(1, 1) == 0);
+}
+```
+
+```cmake
+SET(TEST_DIR "tests")
+SET(TESTS ${SOURCES}
+    "${TEST_DIR}/test_main.cpp"
+    "${TEST_DIR}/test_math.cpp")
+
+# Generate a test executable
+include_directories(lib/catch/include)
+add_executable("${PROJECT_NAME}_test" ${TESTS})
+```
+
+### Writing a custom test-runner for `setuptools`
+
+```python
+from setuptools.command.test import test as TestCommand
+
+class CatchTestCommand(TestCommand):
+    """
+    A custom test runner to execute both python unittest tests and C++ Catch-
+    lib tests.
+    """
+    def distutils_dir_name(self, dname):
+        """Returns the name of a distutils build directory"""
+        dir_name = "{dirname}.{platform}-{version[0]}.{version[1]}"
+        return dir_name.format(dirname=dname,
+                               platform=sysconfig.get_platform(),
+                               version=sys.version_info)
+
+    def run(self):
+        # Run python tests
+        super(CatchTestCommand, self).run()
+        print("\nPython tests complete, now running C++ tests...\n")
+        # Run catch tests
+        subprocess.call(['./python_cpp_example_test'],
+                        cwd=os.path.join('build',
+                                         self.distutils_dir_name('temp')))
+```
+
+```bash
+> python3 setup.py test
+...
+
+test_add (tests.math_test.MainTest) ... ok
+test_subtract (tests.math_test.MainTest) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.001s
+
+OK
+
+Python tests complete, now running C++ tests...
+
+===============================================================================
+All tests passed (2 assertions in 1 test case)
+```
+
+### Wrap-up
+
+You should now have a functioning, minimal python/C++ package that is set-up to unit test both the python and C++ code. In part 2, we'll learn how to auto-generate documentation for the mixed-language code base presented here.
