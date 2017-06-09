@@ -145,7 +145,7 @@ pybind11_add_module(python_cpp_example ${SOURCES} "${SOURCE_DIR}/bindings.cpp")
 
 That's all we need to instruct CMake to build our extension module. Rather than run CMake directly, however, we're going to configure python's `setuptools` to build our package automatically via `setup.py`.
 
-### Building with `setuptools`
+#### Building with `setuptools`
 
 On its own, `setup.py` will not build an extension module with a CMake-based build system. We have to define a custom build command. The code I'm presenting here was largely taken from the [`pybind11`'s CMake example repository](). I won't explain every line of the code here, but in brief, we're defining two classes that will create a temporary build directory and then call CMake to build any extension modules in our package. Add these two class definitions to `setup.py`:
 
@@ -364,7 +364,7 @@ SET(TESTS ${SOURCES}
     "${TEST_DIR}/test_math.cpp")
 
 # Generate a test executable
-include_directories(lib/catch/include)
+include_directories(lib/catch-1.9.4/include)
 add_executable("${PROJECT_NAME}_test" ${TESTS})
 ```
 
