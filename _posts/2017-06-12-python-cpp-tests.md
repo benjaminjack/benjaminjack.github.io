@@ -1,5 +1,5 @@
 ---
-title: Building and testing a hybrid Python/C++ project
+title: Building and testing a hybrid Python/C++ package
 author: Benjamin R. Jack
 layout: post
 excerpt: For my research, I've spent the better part of the last year developing a simulation tool in Python. Python abstracts away things like memory management and type information, making it a great language for working through high-level design decisions. But for simulation software, pure Python is slow. So I've taken to a workflow of prototyping in Python and then rewriting portions of the code base into C++ for performance. I'm left with a high-performance Python package that mixes both Python modules and compiled C++-based extension modules. This combination leverages both the simplicity of Python and the efficiency of C++.
