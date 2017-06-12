@@ -5,7 +5,9 @@ layout: post
 excerpt: None yet...
 ---
 
-Interfacing C++ code with python has been made relatively easy by several libraries. My favorite is `pybind11`, a header-only C++ library which takes inspiration from `Boost.Python` but vastly simplifies the syntax. `Pybind11` allows you to write python wrappers for C++ code and generate a python extension module with minimal boilerplate code. Going from a module to a proper python package, however, takes some more work. In my mind, a python package based on a hybrid Python/C++ code base should include:
+For my research, I've spent the better part of the last year developing a simulation tool in python. Python abstracts away things like memory management and type information, making it a great language for working through high-level design decisions. But for simulation software, pure python is slow. So I've taken to a a workflow of prototyping in python and then rewriting portions of the code base into C++ for performance. I'm left with a high-performance python package that mixes both python modules and compiled C++-based extension modules. This combination leverages both the simplicity of python and the efficiency of C++.
+
+Interfacing C++ code with python has become relatively easy thanks to several libraries. My favorite is [`pybind11`](http://pybind11.readthedocs.io/en/stable/index.html), a header-only C++ library which takes inspiration from `Boost.Python` but vastly simplifies the syntax. `Pybind11` allows you to write python wrappers (also called bindings) for C++ code and generate a python extension module with minimal boilerplate code. Going from a module to a proper python package, however, takes some more work. In my mind, a python package based on a hybrid python/C++ code base should include:
 
 - A build system, such as CMake or make
 - Unit tests for python code
@@ -14,21 +16,20 @@ Interfacing C++ code with python has been made relatively easy by several librar
 
 The aim of this blog post is to describe how to set up a python package that meets all of the above requirements with minimal external tools or libraries.
 
-The first part of this post closely follows the [`pybind11` introductory tutorial]() and the [pybind11/CMake example repository](). This post is not meant as an introduction to pybind11. If you've never used `pybind11` before, it's worth taking the time now to read through some of the [excellent documentation](). For Part 1 of this post, I'll assume a general familiarity with `pybind11`.
+The first part of this post closely follows the [`pybind11` introductory tutorial](http://pybind11.readthedocs.io/en/stable/basics.html) and the [pybind11/CMake example repository](http://pybind11.readthedocs.io/en/stable/compiling.html#building-with-cmake). This post is not meant as an introduction to `pybind11`. If you've never used `pybind11` before, it's worth taking the time now to read through some of the [excellent documentation](http://pybind11.readthedocs.io/en/stable/index.html). For Part 1 of this post, I'll assume a general familiarity with `pybind11`.
 
 In the second part of this post, I'll introduce unit testing frameworks for both the python side and C++ side of our package's code base. For that, we'll use python's built-in `unittest` module and the [`catch` C++ library](). Lastly, I'll demonstrate how to stitch these testing frameworks together with python's `setuptools` and `setup.py`.
 
-All the code presented here has been tested with python 3.6 and a compiler that supports C++11 on macOS Sierra. C++11 support is required by `pybind11`, but the python code and extension modules generated here should work with either python 2 or 3. The code should also work on Windows, although I have not tested it. All code in this blog post is available as a complete working example in this [github repository]().
+All the code presented here has been tested with python 3.6 and a compiler that supports C++11 on macOS Sierra. C++11 support is required by `pybind11`, but the python code and extension modules generated here should work with either python 2 or 3. The code should also work on Windows, although I have not tested it. All code in this blog post is available as a complete working example in this [github repository](https://github.com/benjaminjack/python_cpp_example).
 
 ### Part 1: A simple `pybind11` project
 
 #### The C++ code
 
-To start, we'll create a simple `pybind11`-based python module. The module will share the same name as our package, `python_cpp_example`. The directory structure for our package should be familiar to those who have written python packages before, with a few exceptions:
+To start, we'll create a simple `pybind11`-based python module. The module will share the same name as our package, `python_cpp_example`. The directory structure for our package should be familiar to those who have written python packages before, with a few exceptions, notably `lib`, `build`, and `CMakeLists.txt`:
 
 ```bash
 python_cpp_example/
-├── CMakeLists.txt  # CMake configuration file
 ├── build  # build directory for C++ executables
 ├── lib  # external C++ libraries
 ├── python_cpp_example  # source code (python and C++)
@@ -36,7 +37,7 @@ python_cpp_example/
 └── tests  # unit tests (python and C++)
 ```
 
-The `lib/` directory will contain the C++ libraries needed for our package. Under `lib/`, download and extract the latest `pybind11` release (assuming you're working in a *nix environment):
+The `build/` directory will contain compiled code generated by our build system. The `lib/` directory will contain the C++ libraries needed for our package. Under `lib/`, download and extract the latest `pybind11` release by running the following commands (assuming you're working in a *nix environment):
 
 ```bash
 wget https://github.com/pybind/pybind11/archive/v2.1.1.tar.gz
@@ -76,7 +77,7 @@ int subtract(int i, int j)
 }
 ```
 
-Lastly, we'll define our python wrappers as follows. See the [`pybind11` tutorial]() for a detailed explanation of what each line of code does here.
+Lastly, we'll define our python wrappers in a file called `bindings.cpp`. See the [`pybind11` tutorial](http://pybind11.readthedocs.io/en/stable/basics.html) for a detailed explanation of what each line of code does here.
 
 `bindings.cpp`:
 ```cpp
@@ -97,7 +98,6 @@ We've now defined two functions in C++, `add` and `subtract`, and written the co
 
 ```bash
 python_cpp_example/
-├── CMakeLists.txt
 ├── build
 ├── lib
 │   └── pybind11-2.1.1
@@ -115,15 +115,15 @@ Next we have to set up our build environment. We'll use CMake to build the C++ e
 
 We could have written a Makefile directly to build our package, but using CMake simplifies building `pybind11`-based modules. (If you don't believe me, check out the Makefile that CMake generates.) Using CMake will also make it easier to add C++ unit tests later.
 
-First make sure that you have CMake installed. On macOS, this can be done with brew:
+First make sure that you have [CMake](https://cmake.org/) installed. On macOS, installation can be done with [`brew`](https://brew.sh) by running the following command:
 
 ```bash
 > brew install cmake
 ```
 
-If you are not familiar with CMake, I suggest skimming through the [CMake introductory tutorial](). I'm using a small set of CMake functions here, so even if you're new to CMake, the code should be easy to follow.
+If you are not familiar with CMake, I suggest skimming through the [CMake introductory tutorial](https://cmake.org/cmake-tutorial/). We're going to use a small set of CMake functions here, so even if you're new to CMake, the code should be easy to follow.
 
-To start, define a project, set the source directory, and define a list of C++ sources _without_ `bindings.cpp`. (This list will come in handy later when we want build C++ tests independently of any python bindings.) Add the following to your `CMakeLists.txt` file:
+To start, we'll define a project, set the source directory, and define a list of C++ sources _without_ `bindings.cpp`. (This list will come in handy later when we want build C++ tests independently of any python bindings.) Create a `CMakeLists.txt` file in the package's root directory and add the following:
 
 ```cmake
 cmake_minimum_required(VERSION 2.8.12)
@@ -135,7 +135,7 @@ include_directories(${SOURCE_DIR})
 set(SOURCES "${SOURCE_DIR}/math.cpp")
 ```
 
-Next, add the `pybind11` directory and define an extension module. Make sure `bindings.cpp` is added to the sources list.
+Next, we'll tell CMake to add the `pybind11` directory to our project and define an extension module. This time, make sure `bindings.cpp` is added to the sources list. Add the following to `CMakeLists.txt`:
 
 ```cmake
 # Generate python module
@@ -143,11 +143,11 @@ add_subdirectory(lib/pybind11-2.1.1)
 pybind11_add_module(python_cpp_example ${SOURCES} "${SOURCE_DIR}/bindings.cpp")
 ```
 
-That's all we need to instruct CMake to build our extension module. Rather than run CMake directly, however, we're going to configure python's `setuptools` to build our package automatically via `setup.py`.
+That's all we need to instruct CMake to build our extension module. Rather than run CMake directly, however, we're going to configure python's built-in [`setuptools`](http://setuptools.readthedocs.io/en/latest/) to build our package automatically via `setup.py`.
 
 #### Building with `setuptools`
 
-On its own, `setup.py` will not build an extension module with a CMake-based build system. We have to define a custom build command. The code I'm presenting here was largely taken from the [`pybind11`'s CMake example repository](). I won't explain every line of the code here, but in brief, we're defining two classes that will create a temporary build directory and then call CMake to build any extension modules in our package. Add these two class definitions to `setup.py`:
+On its own, `setup.py` will not build an extension module with a CMake-based build system. We have to define a custom build command. The code I'm presenting here was largely taken from the [`pybind11`'s CMake example repository](https://github.com/pybind/cmake_example). I won't explain every line of the code here, but in brief, we're defining two classes that will create a temporary build directory and then call CMake to build any extension modules in our package. Add these two class definitions to `setup.py`:
 
 ```python
 import os
@@ -238,9 +238,9 @@ setup(
 
 Now you should be able to run `python3 setup.py develop` from within your package's root directory and you will see an extension module generated. You can now import and use your new package. 
 
-Up until now, I have largely followed along with the [`pybind11` tutorial]() and [`pybind11`'s CMake example repository](). In Part 2, I will describe how to add unit testing within this set up.
+Up until now, I have largely followed along with the [`pybind11` tutorial](http://pybind11.readthedocs.io/en/stable/basics.html) and [`pybind11`'s CMake example repository](https://github.com/pybind/cmake_example). In Part 2, I will describe how to add unit testing within this set up.
 
-### Part 2: Adding unit testing
+### Part 2: Adding unit tests
 
 #### Writing python unit tests
 
@@ -280,7 +280,7 @@ if __name__ == '__main__':
     unittest.main()
 ```
 
-That's all you need for python unit tests! You can add as many test files as you want. As long as all of your files have a `_test.py` suffix, `unittest` will automatically discover the them. Run `python3 setup.py test` and you should get output that looks like this:
+That's all you need for python unit tests. You can add as many test files as you want, and each one should define a class that extends `unittest.TestCase`. As long as all of your files have a `_test.py` suffix, `unittest` will automatically discover them. Run `python3 setup.py test` and you should get output that looks like this:
 
 ```bash
 > python3 setup.py test
@@ -293,11 +293,11 @@ Ran 2 tests in 0.001s
 OK
 ```
 
-Python's built-in `unittest` module is a powerful unit testing framework with a variety of built in assertions. You can read more about `unittest` in the [official python documentation]().
+Python's built-in `unittest` module is a powerful unit testing framework with a variety of built in assertions. You can read more about `unittest` in the [official python documentation](https://docs.python.org/3/library/unittest.html).
 
 #### Writing C++ unit tests with `catch`
 
-Unlike python, C++ needs an external library to enable unit testing. I've chosen to use `catch` for its simple syntax and its header-only structure. Download and extract `catch` in the `lib/` directory of your package. On a *nix system, you could run the following:
+Unlike python, C++ needs an external library to enable unit testing. I've chosen to use [`catch`](http://catch-lib.net) for its concise syntax and its header-only structure. Download and extract `catch` in the `lib/` directory of your package. On a *nix system, you could run the following:
 
 ```bash
 cd lib
@@ -305,7 +305,7 @@ wget https://github.com/philsquared/Catch/archive/v1.9.4.tar.gz
 tar -xvf v1.9.4.tar.gz
 ```
 
-Similar to python's `__init__.py`, catch requires an initialization file that I'm naming `test_main.cpp`. Under the `tests/` directory, add the following file:
+Similar to python's `__init__.py`, `catch` requires an initialization file that we'll `test_main.cpp`. This configuration file must contain two specific lines and nothing else. Under the `tests/` directory, add the following file:
 
 `test_main.cpp`:
 ```cpp
@@ -328,7 +328,7 @@ TEST_CASE("Addition and subtraction")
 }
 ```
 
-These tests are analagous to the python tests in the previous section. Normally, I would not unit test both the `pybind11` python wrappers and the underlying C++ definitions for such simple functions. However, you can imagine an instance where you didn't want to expose all of your C++ code with python wrappers, but you still wanted to unit test that C++ code. Likewise, the python wrappers can get quite complex and it may be useful to test your C++ code independently of the wrapping code.
+These tests are analagous to the python tests in the previous section. Normally, I would not unit test both the `pybind11` python wrappers and the underlying C++ definitions for such simple functions. However, you can imagine an instance in which you didn't want to expose all of your C++ code with python wrappers, but you still wanted to unit test that C++ code. Likewise, the python wrappers can get quite complex and it may be useful to test your C++ code independently of the wrapping code.
 
 Your directory structure should now look something like this:
 
@@ -368,11 +368,11 @@ include_directories(lib/catch-1.9.4/include)
 add_executable("${PROJECT_NAME}_test" ${TESTS})
 ```
 
-Now run `python3 ./setup.py develop` and if you navigate to `build/temp.*`, where `temp.*` varies by operating system, you should see an executable `python_cpp_example_test`. Running this executable will execute the `catch` unit tests. Rather than run this executable ourselves, we will tell `setuptools` to run it along side the python unit tests.
+Now run `python3 ./setup.py develop` and if you navigate to `build/temp.*` (e.g., `build/temp.macosx-10.12-x86_64-3.6` on my system), you should see an executable `python_cpp_example_test`. Running this executable will execute the `catch` unit tests. Rather than run this executable ourselves, however, we will tell `setuptools` to run it along side the python unit tests.
 
 #### Writing a custom test-runner for `setuptools`
 
-Just like we wrote a custom extension builder in `setup.py` in Part 1, we'll write a custom test runner to run both python and C++ unit tests. Add the following to your `setup.py` file: 
+Just like we wrote a custom extension builder in `setup.py` in Part 1, we'll write a custom test runner to run both python and C++ unit tests. Add the following import command and class definition to your `setup.py` file: 
 
 ```python
 from setuptools.command.test import test as TestCommand
@@ -444,4 +444,4 @@ Under the hood, the above command is first building any extension modules, execu
 
 ### Wrap-up
 
-You should now have a functioning, minimal python/C++ package that is set up to unit test both the python and C++ code. For a complete working example, see the [github repository]() that accompanies this blog post. In my next blog post, we'll learn how to auto-generate documentation for the mixed-language code base presented here.
+You should now have a functioning, minimal python/C++ package that is set up to unit test both the python and C++ code. For a complete working example, see the [github repository](https://github.com/benjaminjack/python_cpp_example) that accompanies this blog post. In my next blog post, we'll learn how to auto-generate documentation for the mixed-language code base presented here.
