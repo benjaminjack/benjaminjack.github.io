@@ -1,5 +1,5 @@
 ---
-title: Setting Up El Capitan (or Sierra) for Biocomputing
+title: Setting up El Capitan (or Sierra) for biocomputing
 author: Benjamin R. Jack
 layout: post
 excerpt: I recently wiped my Macbook Pro and reinstalled Mac OS X El Capitan. I did this for several reasons, but mostly because I was thoroughly frustrated with MacPorts and wanted to switch to Homebrew (more on that later). To cleanly rid my laptop of MacPorts, I started with a fresh copy of El Capitan. This guide describes the steps I took to configure El Capitan for biocomputing.
