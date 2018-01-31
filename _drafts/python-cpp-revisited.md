@@ -5,9 +5,17 @@ layout: post
 excerpt: Blank
 ---
 
-Last year I published a blog post that explained how to structure a Python package with a C++ extension module. Well, seven months later, and after falling down the rabithole of python packaging, build, and distribution systems, I'm revisiting Python/C++ packaging. I'm now convinced that the file structure that I described in my original post is not ideal. This post will lay out my original goals in building a hybrid Python/C++ package, the mistakes I made in the old approach, my new approach, and some final thoughts on the big picture of working on projects with mixed code bases.
+Last year I published a blog post that explained how to structure a Python package with a C++ extension module. I laid out four basic requirements for what the package should include:
 
-The first part of this post assumes familiarity with my last blog post. If you just want to know how to set up your package, you can skip ahead.
+- An interface for a build system, such as CMake or make
+- Unit tests for Python code
+- Unit tests for C++ code, independent of Python wrappers
+- A unified build-and-test command that builds all extension modules and runs both Python and C++ tests
+
+At the time that I wrote my original post, I had found a satisfactory package structure with `Pybind11`, CMake, Catch, and Python's setuptools.
+Well, seven months later, I'm revisiting Python/C++ packaging. After falling down the rabbithole of python packaging, build, and distribution systems, I'm now convinced that the structure that I described in my original post is not ideal. This post will lay out the problems I discovered with my prior approach, and a complete guide to my new approach. I'll conclude with some thoughts on the big picture of working on projects with mixed codebases.
+
+The first part of this post assumes familiarity with my last blog post. If you just want to know how to set up your package, you can skip ahead. If you're even more impatient, you can go right to the complete working example on Github.
 
 ### Polluted namespaces and import madness
 
