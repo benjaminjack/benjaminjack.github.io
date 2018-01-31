@@ -15,6 +15,10 @@ body {
 	background-size: 700px;
 }
 
+pre { 
+	line-height: 16pt;
+}
+
 header {
 	margin: 0;
 	padding: 0;
