@@ -58,7 +58,20 @@ python_cpp_example
 └── tests/  # Tests live here
 ```
 
-This layout guards against some of the import problems I've described above. Namely, with the correct `setup.py`, which I'll describe below, `tests` will never be accidentally added to the global package namespace. Using this layout, we will construct our hybrid Python/C++ package. The following sections follow closely with my [prior blog post](2017/06/12/python-cpp-tests.html), but adapted to this new directory structure.
+This layout guards against some of the import problems I've described above. To make sure nothing outside of `src/` gets added to the global package namespace, add these two arguments to `setup()` in your `setup.py`:
+
+```python
+from setuptools import find_packages
+
+setup(
+    ...
+    packages=find_packages('src'),
+    package_dir={'':'src'},
+    ...
+)
+```
+
+This garauntees that `tests` will never be accidentally added to the global package namespace. Using this layout, we will construct our hybrid Python/C++ package. The following sections follow closely with my [prior blog post](2017/06/12/python-cpp-tests.html), but adapted to this new directory structure.
 
 #### A simple package with a `pybind11`-based C++ extension module
 
@@ -308,7 +321,7 @@ In the same `tests/` directory, add a file `math_test.py` with a few simple unit
 
 ```python
 import unittest
-import python_cpp_example  # our `pybind11`-based extension module
+from python_cpp_example import python_cpp_example  # our `pybind11`-based extension module
 
 class MainTest(unittest.TestCase):
     def test_add(self):
