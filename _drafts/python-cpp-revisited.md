@@ -5,20 +5,13 @@ layout: post
 excerpt: Blank
 ---
 
-Last year I published a blog post that explained how to structure a Python package with a C++ extension module. I laid out four basic components the package should include:
+Last year I published a blog post that explained [how to structure a Python package with a C++ extension module](2017/06/12/python-cpp-tests.html). My goal was to craft a Python package that leveraged C++ for performance and had an easily maintainable and testable structure. Well, seven months later, I'm revisiting Python/C++ packaging. I'm now convinced that the structure that I described in my original post is not ideal. This post will lay out the problems I discovered with my prior approach, and a complete guide to my new approach. I'll conclude with some thoughts on the big picture of working on projects with mixed codebases.
 
-- An interface for a build system, such as CMake or make
-- Unit tests for Python code
-- Unit tests for C++ code, independent of Python wrappers
-- A unified build-and-test command that builds all extension modules and runs both Python and C++ tests
-
-At the time that I wrote my original post, I combined `pybind11`, CMake, Catch, and Python's `setuptools` and `unittest` packages into a functioning package. To organize these components, I thought I had found a reasonable, stable directory structure. Well, seven months later, I'm revisiting Python/C++ packaging. After falling down the rabbithole of python packaging, build, and distribution systems, I'm now convinced that the structure that I described in my original post is not ideal. This post will lay out the problems I discovered with my prior approach, and a complete guide to my new approach. I'll conclude with some thoughts on the big picture of working on projects with mixed codebases.
-
-The first part of this post assumes familiarity with my last blog post. If you just want to know how to set up your package, you can skip ahead. If you're even more impatient, you can go right to the complete working example on Github.
+The first part of this post assumes familiarity with [my last blog post](2017/06/12/python-cpp-tests.html). If you just want to know how to set up your package, you can skip ahead. If you're even more impatient, you can go right to the complete working example on Github.
 
 ### Part 1: Polluted namespaces and import madness
 
-Python's package import and namespace system is complex, to say the least. [There are many pitfalls](http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html). Recall the package directory structure that I described in my previous post:
+Python's package import and namespace system is complex, to say the least. [There are many pitfalls](http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html). Recall the repository directory structure that I described in my previous post:
 
 ```bash
 python_cpp_example/
@@ -42,18 +35,20 @@ python_cpp_example/
     └── test_math.cpp
 ```
 
-This directory structure is common. The root directory `python_cpp_example/` contains a LICENSE, README.md, setup.py and other files that support the `python_cpp_example` package. The package source code lives in a subdirectory also named `python_cpp_example`. Strictly speaking, a python package is a collection of a python modules in a directory with an `__init__.py` file that tells python, "Hey, this is a package." So in this example, the `python_cpp_example` *subdirectory* is really the package. Upon installation, `setuptools` will add this subdirectory to the global python import namespace. This behavior is usually desirable, so we can import our installed package from anywhere by running `import python_cpp_example`. However, without specifying exactly where our package source code lives in `setup.py`, `setuptools` will add *any* subdirectory with an `__init__.py` to the global namespace. Notice a problem with the directory structure above? The `tests` directory also has an `__init__.py`, making it a package that `setuptools` will install. Running `setup.py install` then makes this possible:
+This directory structure is [common](http://docs.python-guide.org/en/latest/writing/structure/). The root directory `python_cpp_example/` contains a LICENSE, README.md, setup.py and other files that support the `python_cpp_example` package. The package source code lives in a subdirectory also named `python_cpp_example/`. Strictly speaking, a python package is a collection of a python modules in a directory with an `__init__.py` file that tells python, "Hey, this is a package." So in this example, the `python_cpp_example/` *subdirectory* is really the package. 
+
+When actively developing a Python package, developers commonly install packages in development mode so they can make changes to the source code without having to reinstall the package after every change. In our example, running `setup.py develop` will add the `python_cpp_example` package to the global python import namespace. This behavior is desirable so we can import our installed package from anywhere by running `import python_cpp_example`. However, without specifying in `setup.py` exactly where our package source code lives, running `setup.py develop` will add *any* subdirectory with an `__init__.py` to the global namespace. Notice a problem with the directory structure above? The `tests` directory also has an `__init__.py`, making it a package that `setuptools` will install. Running `setup.py develop` then makes this possible:
 
 ```python
 import tests  # Uh-oh
 tests.test_math.test_add()
 ```
 
-We've polluted the global package namespace with a generic-sounding `tests` package. This is definitely not what we want. Yet, even well-maintained and widely-used Python packages will do this inadvertantly (I'm looking at you scikit). So what can we do? We can specify our source directories in `setup.py`, but the safer option is to also change directory structure to proactively avoid import problems.
+We've polluted the global package namespace with a generic-sounding `tests` package. This is definitely not what we want. So what can we do? One option would be to never install our package development mode, but this is a fragile solution. Our package should behave the same whether it is installed into `site-packages/` or in development mode. The safer option is to change the directory structure and specify source directories in `setup.py` to proactively avoid import problems.
 
 ### Part 2: A better package structure
 
-Many others have written about how to structure a Python package. The most thorough and well-reasoned post I've read suggests the following layout:
+Many others have written about [how to structure a Python package](https://www.google.com/search?q=python+package+structure). The most [thorough and well-reasoned post](https://blog.ionelmc.ro/2014/05/25/python-packaging/) I've read suggests the following layout:
 
 ```bash
 python_cpp_example
@@ -63,11 +58,11 @@ python_cpp_example
 └── tests/  # Tests live here
 ```
 
-This layout guards against some of the import problems I've described above. Namely, with the correct `setup.py`, which I'll describe below, `tests` will never be accidentally added to the global package namespace. So, this is the layout from which we will construct our hybrid Python/C++ package. The next two sections follow closely with my prior blog post, but adapted to this new directory structure.
+This layout guards against some of the import problems I've described above. Namely, with the correct `setup.py`, which I'll describe below, `tests` will never be accidentally added to the global package namespace. Using this layout, we will construct our hybrid Python/C++ package. The following sections follow closely with my [prior blog post](2017/06/12/python-cpp-tests.html), but adapted to this new directory structure.
 
-#### A simple package with a `pybind11` extension module
+#### A simple package with a `pybind11`-based C++ extension module
 
-To start, we'll create a simple `pybind11`-based Python module. The module will share the same name as our package, `python_cpp_example`. The directory structure for our package is similar to the one described above, with a few additions, notably `lib`, `build`, and `CMakeLists.txt`:
+To start, we'll create a simple `pybind11`-based Python module. `Pybind11` is an excellent header-only C++ library that makes it easy to write Python wrappers for any C++ code and bundle them into an extension module. The extension module will share the same name as our package, `python_cpp_example`. The directory structure for our package is similar to the one described above, with a few additions, notably `lib`, `build`, and `CMakeLists.txt`:
 
 ```bash
 python_cpp_example
