@@ -87,7 +87,7 @@ python_cpp_example
 └── tests/  # Python and C++ unit tests
 ```
 
-We'll assume that our package already contains one module called `hello.py`.
+We'll also assume that our package already contains one module called `hello.py`.
 
 `hello.py`:
 ```python
