@@ -5,13 +5,13 @@ layout: post
 excerpt: Last year I published a blog post that explained how to structure a Python package with a C++ extension module. My goal was to craft a Python package that leveraged C++ for performance and had an easily maintainable and testable structure. Well, seven months later, I'm revisiting Python/C++ packaging. I'm now convinced that the structure that I described in my original post is not ideal. This post will lay out the problems I discovered with my prior approach, and a complete guide to my new approach. I'll conclude with some thoughts on the big picture of working on projects with mixed codebases.
 ---
 
-Last year I published a blog post that explained [how to structure a Python package with a C++ extension module](2017/06/12/python-cpp-tests.html). My goal was to craft a Python package that leveraged C++ for performance and had an easily maintainable and testable structure. Well, seven months later, I'm revisiting Python/C++ packaging. I'm now convinced that the structure that I described in my original post is not ideal. This post will lay out the problems I discovered with my prior approach, and a complete guide to my new approach. I'll conclude with some thoughts on the big picture of working on projects with mixed codebases.
+Last year I published a blog post that explained [how to structure a Python package with a C++ extension module](2017/06/12/python-cpp-tests.html). My goal was to craft a Python package that leveraged C++ for performance and had an easily maintainable and testable structure. Well, seven months later, I'm revisiting Python/C++ packaging. I'm now convinced that the structure that I described in my original post is not ideal. This post will lay out the problems I discovered with my prior approach, and explain my new approach. I'll conclude with some thoughts on the big picture of working on projects with mixed codebases.
 
-The first part of this post assumes familiarity with [my last blog post](2017/06/12/python-cpp-tests.html). If you just want to know how to set up your package, you can skip ahead. If you're even more impatient, you can go right to the [complete working example on Github](https://github.com/benjaminjack/python_cpp_example).
+The first part of this post assumes familiarity with [my last blog post](2017/06/12/python-cpp-tests.html). If you just want to know how to set up your package, you can skip ahead to Part 2. If you're even more impatient, you can go right to the [complete working example on Github](https://github.com/benjaminjack/python_cpp_example).
 
 ### Part 1: Polluted namespaces and import madness
 
-Python's package import and namespace system is complex, to say the least. [There are many pitfalls](http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html). Recall the repository directory structure that I described in my previous post:
+Python's package import and namespace system is complex, to say the least. [There are many pitfalls](http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html). Recall the repository directory structure that I described in my [previous post](2017/06/12/python-cpp-tests.html):
 
 ```bash
 python_cpp_example
@@ -35,16 +35,16 @@ python_cpp_example
     └── test_math.cpp
 ```
 
-This directory structure is [common](http://docs.python-guide.org/en/latest/writing/structure/). The root directory `python_cpp_example/` contains a LICENSE, README.md, setup.py and other files that support the `python_cpp_example` package. The package source code lives in a subdirectory also named `python_cpp_example/`. Strictly speaking, a python package is a collection of a python modules in a directory with an `__init__.py` file that tells python, "Hey, this is a package." So in this example, the `python_cpp_example/` *subdirectory* is really the package. 
+This directory structure is [common](http://docs.python-guide.org/en/latest/writing/structure/). The root directory `python_cpp_example` contains a `README.md`, `setup.py`, and other files that support the `python_cpp_example` package. The package source code lives in a subdirectory also named `python_cpp_example`. Strictly speaking, a Python package is a collection of Python modules in a directory with an `__init__.py` file that tells Python, "Hey, this is a package." So in this example, the `python_cpp_example` *subdirectory* is really the package. 
 
-When actively developing a Python package, developers commonly install packages in development mode so they can make changes to the source code without having to reinstall the package after every change. In our example, running `setup.py develop` will add the `python_cpp_example` package to the global python import namespace. This behavior is desirable so we can import our installed package from anywhere by running `import python_cpp_example`. However, without specifying in `setup.py` exactly where our package source code lives, running `setup.py develop` will add *any* subdirectory with an `__init__.py` to the global namespace. Notice a problem with the directory structure above? The `tests` directory also has an `__init__.py`, making it a package that `setuptools` will install. Running `setup.py develop` then makes this possible:
+When actively developing a Python package, developers commonly install packages in development mode so they can make changes to the source code without having to reinstall the package after every change. In our example above, running `setup.py develop` will add the `python_cpp_example` package to the global Python import namespace. This behavior is desirable so that we can run `import python_cpp_example` from anywhere. However, without specifying in `setup.py` exactly where our package source code lives, running `setup.py develop` will add *any* subdirectory with an `__init__.py` to the global namespace. Notice a problem with the directory structure above? The `tests` directory also has an `__init__.py`, making it a package that `setuptools` will install. Running `setup.py develop` then makes this possible:
 
 ```python
 import tests  # Uh-oh
 tests.test_math.test_add()
 ```
 
-We've polluted the global package namespace with a generic-sounding `tests` package. This is definitely not what we want. So what can we do? One option would be to never install our package development mode, but this is a fragile solution. Our package should behave the same whether it is installed into `site-packages/` or in development mode. The safer option is to change the directory structure and specify source directories in `setup.py` to proactively avoid import problems.
+We've polluted the global package namespace with a generic-sounding `tests` package. This is definitely not what we want. So what can we do? One option would be to never install our package in development mode, but this is a fragile solution. Our package should behave the same whether it is installed into `site-packages/` or in development mode. The safer option is to change the directory structure and specify source directories in `setup.py` to proactively avoid import problems.
 
 ### Part 2: A better package structure
 
@@ -58,7 +58,7 @@ python_cpp_example
 └── tests/  # Tests live here
 ```
 
-This layout guards against some of the import problems I've described above. To make sure nothing outside of `src/` gets added to the global package namespace, add these two arguments to `setup()` in your `setup.py`:
+This layout guards against some of the import problems I described in Part 1. To make sure nothing outside of `src/` gets added to the global package namespace, add these two arguments to `setup()` in your `setup.py`:
 
 ```python
 from setuptools import find_packages
@@ -71,7 +71,7 @@ setup(
 )
 ```
 
-This guarantees that `tests` will never be accidentally added to the global package namespace. Using this layout, we will construct our hybrid Python/C++ package. The following sections follow closely with my [prior blog post](2017/06/12/python-cpp-tests.html), but adapted to this new directory structure.
+This guarantees that `tests` will never be accidentally added to the global package namespace. We will construct our hybrid Python/C++ package using this layout. The following sections follow closely with my [prior blog post](2017/06/12/python-cpp-tests.html), but adapted to this new directory structure.
 
 #### A simple package with a `pybind11`-based C++ extension module
 
@@ -80,10 +80,12 @@ To start, we'll create a simple `pybind11`-based Python module. [`Pybind11`](htt
 ```bash
 python_cpp_example
 ├── build/  # Build directory for C++ extension modules
-├── lib  # External C++ libraries
+├── lib/  # External C++ libraries
 ├── setup.py
 ├── src
-│   └── python_cpp_example/  # Python and C++ source code
+│   └── python_cpp_example  # Python and C++ source code
+│       ├── __init__.py
+│       └── hello.py
 └── tests/  # Python and C++ unit tests
 ```
 
@@ -95,9 +97,9 @@ def say_hello():
     print("Hello world!")
 ```
 
-Make sure that the `src/python_cpp_example` directory contains a blank `__init__.py` so Python knows that this directory is a package. We will place our Python and C++ source code in the same directory.
+Make sure that the `src/python_cpp_example` directory contains a blank `__init__.py` so Python knows that this directory is a package. We will place our C++ source code in the same directory as our Python code.
 
-The `build/` directory will contain compiled code generated by our build system. The `lib/` directory will contain the C++ libraries needed for our package. Under `lib/`, download and extract the latest `pybind11` release by running the following commands (assuming you're working in a *nix environment):
+The `build` directory will contain compiled code generated by our build system. The `lib` directory will contain the C++ libraries needed for our package. Under `lib/`, download and extract the latest `pybind11` release by running the following commands (assuming you're working in a *nix environment):
 
 ```bash
 wget https://github.com/pybind/pybind11/archive/v2.1.1.tar.gz
@@ -169,7 +171,7 @@ python_cpp_example
 │       ├── hello.py
 │       ├── bindings.cpp
 │       ├── math.cpp
-│       ├── math.hpp
+│       └── math.hpp
 ├── setup.py
 └── tests
 ``` 
@@ -310,7 +312,7 @@ setup(
 
 Now you should be able to run `python3 setup.py develop` from within your package's root directory and you will see an extension module generated under `src/python_cpp_example/`. You can now import and use your new package. 
 
-Up until now, I have largely followed along with the [`pybind11` tutorial](http://pybind11.readthedocs.io/en/stable/basics.html) and [`pybind11`'s CMake example repository](https://github.com/pybind/cmake_example). In Part 2, I will describe how to add unit testing within this set up.
+Up until now, I have largely followed along with the [`pybind11` tutorial](http://pybind11.readthedocs.io/en/stable/basics.html) and [`pybind11`'s CMake example repository](https://github.com/pybind/cmake_example). In the following sections, I will describe how to add unit testing within this set up.
 
 #### Writing Python unit tests
 
@@ -336,7 +338,7 @@ python_cpp_example/
     └── __init__.py
 ```
 
-In the same `tests/` directory, add a file `math_test.py` with a few simple unit tests.
+In the same `tests` directory, add a file `math_test.py` with a few simple unit tests.
 
 ```python
 import unittest
@@ -383,7 +385,7 @@ Python's built-in `unittest` module is a powerful unit testing framework with a 
 
 #### Writing C++ unit tests with `catch`
 
-Unlike Python, C++ needs an external library to enable unit testing. I've chosen to use [`catch`](http://catch-lib.net) for its concise syntax and its header-only structure. Download and extract `catch` in the `lib/` directory of your package. On a *nix system, you could run the following:
+Unlike Python, C++ needs an external library to enable unit testing. I've chosen to use [`catch`](http://catch-lib.net) for its concise syntax and its header-only structure. Download and extract `catch` in the `lib` directory of your package. On a *nix system, you could run the following:
 
 ```bash
 cd lib
@@ -393,7 +395,7 @@ tar -xvf v1.9.4.tar.gz
 cp -r catch-1.9.4 python_cpp_example/lib/catch 
 ```
 
-Similar to Python's `__init__.py`, `catch` requires an initialization file that we'll name `test_main.cpp`. This configuration file must contain two specific lines and nothing else. Under the `tests/` directory, add the following file:
+Similar to Python's `__init__.py`, `catch` requires an initialization file that we'll name `test_main.cpp`. This configuration file must contain two specific lines and nothing else. Under the `tests` directory, add the following file:
 
 `test_main.cpp`:
 ```cpp
@@ -401,7 +403,7 @@ Similar to Python's `__init__.py`, `catch` requires an initialization file that 
 #include <catch.hpp>
 ```
 
-Now we'll make a file with two simple unit tests. This time I'm using a `test_` prefix (rather than a `_test.py` suffix) to easily distinguish between Python unit tests and C++ unit tests without looking at the file extension. Add the following to a file named `test_math.cpp` in the `test/` directory:
+Now we'll make a file with two simple unit tests. This time I'm using a `test_` prefix (rather than a `_test.py` suffix) to easily distinguish between Python unit tests and C++ unit tests without looking at the file extension. Add the following to a file named `test_math.cpp` in the `tests` directory:
 
 `test_math.cpp`
 ```cpp
@@ -461,7 +463,7 @@ Now run `python3 ./setup.py develop` and if you navigate to `build/temp.*` (e.g.
 
 #### Using Python's `unittest` to execute C++ `catch` tests
 
-To run our C++ unit tests along side the Python tests, we're going to call the `python_cpp_example_test` executable from a Python unit test. This requires two steps: first moving `python_cpp_example_test` from the build directory to the `tests/` directory, then writing a simple `unittest` test that calls the executable.
+To run our C++ unit tests along side the Python tests, we're going to call the `python_cpp_example_test` executable from a Python unit test. This requires two steps: first moving the `python_cpp_example_test` executable from `build/` to `tests/`, then writing a simple `unittest` test that calls the executable.
 
 First, add this `copy_test_file()` function to the `CMakeBuild` class in `setup.py`:
 
@@ -500,7 +502,7 @@ class CMakeBuild(build_ext):
 ... 
 ```
 
-Then call `copy_test_file` from within `CMakeBuild.build_extension`.
+Then call `copy_test_file()` from within `CMakeBuild.build_extension()`.
 
 `setup.py`:
 ```python
@@ -525,7 +527,7 @@ class CMakeBuild(build_ext):
 ... 
 ```
 
-Upon building the extension module, Python's setuptools will also now copy `python_cpp_example_test` into the `tests/bin` directory. Next we add another Python unit test under the `tests` directory.
+Upon building the extension module, Python's setuptools will also now copy `python_cpp_example_test` into the `tests/bin` directory. Next we'll add another Python unit test under the `tests` directory.
 
 `test_cpp.py`:
 ```python
