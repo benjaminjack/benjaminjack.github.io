@@ -5,7 +5,7 @@ layout: post
 excerpt: For my research, I've spent the better part of the last year developing a simulation tool in Python. Python abstracts away things like memory management and type information, making it a great language for working through high-level design decisions. But for simulation software, pure Python is slow. So I've taken to a workflow of prototyping in Python and then rewriting portions of the code base into C++ for performance. I'm left with a high-performance Python package that mixes both Python modules and compiled C++-based extension modules. This combination leverages both the simplicity of Python and the efficiency of C++.
 ---
 
-**UPDATE** (2/2/2018): I now think there are better ways to structure a Python package that contains both Python and C++ source code. Please see my [follow-up post](). I'm leaving this post here for posterity. 
+**UPDATE** (2/2/2018): I now think there are better ways to structure a Python package that contains both Python and C++ source code. Please see my [follow-up post](/2018/02/02/python-cpp-revisited.html). I'm leaving this post here for posterity. 
 
 For my research, I've spent the better part of the last year developing a simulation tool in Python. Python abstracts away things like memory management and type information, making it a great language for working through high-level design decisions. But for simulation software, pure Python is slow. So I've taken to a workflow of prototyping in Python and then rewriting portions of the code base into C++ for performance. I'm left with a high-performance Python package that mixes both Python modules and compiled C++-based extension modules. This combination leverages both the simplicity of Python and the efficiency of C++.
 
