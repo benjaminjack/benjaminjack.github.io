@@ -467,6 +467,9 @@ First, add this `copy_test_file()` function to the `CMakeBuild` class in `setup.
 
 ```python
 ...
+from shutil import copyfile, copymode
+...
+
 class CMakeBuild(build_ext):
     def run(self):
         ...
