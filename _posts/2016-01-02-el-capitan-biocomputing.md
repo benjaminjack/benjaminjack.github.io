@@ -5,13 +5,15 @@ layout: post
 excerpt: I recently wiped my Macbook Pro and reinstalled Mac OS X El Capitan. I did this for several reasons, but mostly because I was thoroughly frustrated with MacPorts and wanted to switch to Homebrew (more on that later). To cleanly rid my laptop of MacPorts, I started with a fresh copy of El Capitan. This guide describes the steps I took to configure El Capitan for biocomputing.
 ---
 
+**Update (3/28/18):** _This post has been updated to reflect changes in how scientific software is distributed in Homebrew._
+
 **Update (3/26/17):** _After six months of using macOS Sierra, I can state confidently that all instructions discussed below hold true for both El Capitan and Sierra. So feel free to use this guide to set up macOS Sierra for biocomputing._
 
 I recently wiped my Macbook Pro and reinstalled Mac OS X El Capitan. I did this for several reasons, but mostly because I was thoroughly frustrated with MacPorts and wanted to switch to Homebrew (more on that later). To cleanly rid my laptop of MacPorts, I started with a fresh copy of El Capitan. This guide describes the steps I took to configure El Capitan for biocomputing. If you are interested in configuring Yosemite for biocomputing instead, see [this post by Stephanie Spielman](http://sjspielman.org/configure_yosemite_biocomputing/). Many of the following steps for El Capitan were derived from her post.
 
-#### 1.  Install Xcode and Xcode Command Line Tools
+#### 1.  Install Xcode Command Line Tools
 
-~~Head over to the Mac App Store and download the latest version of Xcode. It is free and provided by Apple. Xcode is quite larger (~2GB), but contains the necessary tools for compiling code and installing other software.~~ **Update (3/26/17):** _It is no longer necessary to download the full Xcode IDE from the Mac App Store. You can save youreself some disk space and just run the command below to only install Xcode Command Line tools._ By default, Xcode cannot be accessed from the command line, so we must install Xcode Command Line Tools with the following command in the Terminal:
+The Xcode Command Line Tools are provided by Apple and contain the necessary tools for compiling code and installing other software. Install Xcode Command Line Tools with the following command in the Terminal:
 
 {% highlight bash %}
 xcode-select --install
@@ -68,17 +70,16 @@ pip install jupyter
 Run the following commands to install R:
 
 {% highlight bash %}
-brew tap homebrew/science
-brew install R
+brew tap brewsci/science
+brew tap brewsci/bio
+brew cask install R
 {% endhighlight %}
 
 You will probably also want to install a few of Hadley Wickham's packages:
 
 {% highlight bash %}
 R # Launch R
-> install.packages("ggplot2")
-> install.packages("dplyr")
-> install.packages("tidyr")
+> install.packages("tidyverse")
 {% endhighlight %}
 
 #### 6.  Install RStudio for R development
@@ -87,11 +88,19 @@ I normally avoid integrated development environments because they tend to be ove
 
 #### 8. Install MacTeX
 
-To export Rmarkdown documents as PDFs, which I often do to share analyses with colleagues, RStudio requires MacTeX. The installer for the full version of MacTeX is giant (~3GB), but worth it if you plan to share your work as a PDF. Unless you're experienced with MacTeX, go with the full MacTeX installation rather than BasicTeX. You can download the [MacTeX installer here](https://tug.org/mactex/).
+To export Rmarkdown documents as PDFs, which I often do to share analyses with colleagues, RStudio requires MacTeX. The installer for the full version of MacTeX is giant (~3GB), but worth it if you plan to share your work as a PDF. Unless you're experienced with MacTeX, go with the full MacTeX installation rather than BasicTeX. You can install MacTex by running:
+
+{% highlight bash %}
+brew cask install mactex
+{% endhighlight %}
 
 #### 9.  Install Atom for general text-editing and scripting
 
-Atom is an excellent new text editor from the team behind Github. I now use Atom in place of both TextWrangler, which I used as a general purpose text editor, and PyCharm, which I used for Python development. Unlike TextWrangler (and Sublime Text which also has a large following), Atom is both free and open-source. I highly recommend it. You can [download Atom here](https://atom.io).
+Atom is an excellent new text editor from the team behind Github. I now use Atom in place of both TextWrangler, which I used as a general purpose text editor, and PyCharm, which I used for Python development. Unlike TextWrangler (and Sublime Text which also has a large following), Atom is both free and open-source. I highly recommend it. Again, you can install Atom via brew:
+
+{% highlight bash %}
+brew cask install atom
+{% endhighlight %}
 
 #### Wrap-up
 
