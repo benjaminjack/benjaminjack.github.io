@@ -11,9 +11,8 @@ layout: default
   {% for post in site.posts %}
     <li>
       <h4><a href="{{ post.url }}">{{ post.title }}</a></h4>
-      <br />
+      <span class="date">{{ post.date | date_to_string }}</span>
     	{{ post.excerpt | strip_html }} 
-     <span class="date">{{ post.date | date_to_string }}</span>
     </li>
     <hr />
   {% endfor %}
