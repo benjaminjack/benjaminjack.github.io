@@ -6,8 +6,6 @@ body {
 	line-height: 1.5em;
 	margin: 0;
 	padding: 0 0.5em 3em 0.5em;
-	background: white url("img/pymol.jpg") no-repeat 90% top;
-	background-size: 700px;
 }
 
 pre { 
@@ -46,25 +44,25 @@ h4 {
 
 h1#name {
 	font-family: 'Merriweather', Georgia, Times, serif;
-	font-size: 30pt;
-	line-height: normal;
+	font-size: 28pt;
+	line-height: 1em;
 	text-transform: uppercase;
 	font-weight: 700;
 	letter-spacing: 0.02em;
-	margin: 10px -1rem 0 -1rem;
-	padding: 0 1rem 0 1rem;
+	margin: 0 -1rem 0 -1rem;
+	padding: 1rem 1rem 1rem 1rem;
 	background: rgba(39, 39, 39, 0.9);
-	display: inline-block;
+	/*display: inline-block; */
 
+}
+
+div#navigation.home h1#name {
+	margin-top: 0;
 }
 
 h1#name a, h1#name a:hover {
 	color: white;
 	text-decoration: none;
-}
-
-div#navigation.home h1#name {
-	margin-top: 160px;
 }
 
 hr {
@@ -96,7 +94,7 @@ div.container {
 div#navigation.home ul, div#navigation ul {
 	font-family: 'Source Sans Pro', sans-serif;
 	text-transform: uppercase;
-	font-size: 28pt;
+	font-size: 22pt;
 	line-height: normal;
 	letter-spacing: 0.02em;
 	font-weight: 300;
@@ -109,10 +107,9 @@ div#navigation.home ul, div#navigation ul {
 }
 
 div#navigation.home ul li, div#navigation ul li {
-	background-color: white;
 	padding: 0;
 	margin: 0;
-	background: rgba(255,255,255,0.9);
+	background: rgba(255,255,255,0.8);
 }
 
 div#navigation.home ul li a, div#navigation ul li a {
@@ -309,10 +306,16 @@ div.altmetric-embed, div.altmetric-embed a {
 	body {
 		font-size: 12pt;
 		line-height: 1.7em;
+		background: white url("img/pymol.jpg") no-repeat 90% top;
+		background-size: 700px;
 	}
 
-	div#navigation ul {
+	div#navigation ul, div#navigation.home ul {
 		font-size: 28pt;
+	}
+
+	div#navigation.home h1#name {
+		margin-top: 160px;
 	}
  
 	div#navigation.home {
@@ -327,6 +330,9 @@ div.altmetric-embed, div.altmetric-embed a {
 	h1#name {
 		font-size: 42pt;
 		margin-top: 160px;
+		padding-top: 0.1em;
+		padding-bottom: 0.1em;
+	    display: inline-block;
 	}
 
 	div.container {
