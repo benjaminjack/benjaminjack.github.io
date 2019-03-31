@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Merriweather:400,700|Source+Sans+Pro:300,400');
+@import url('https://fonts.googleapis.com/css?family=Merriweather:400,700,900|Source+Sans+Pro:300,400');
 
 body {
 	font-family: 'Source Sans Pro', sans-serif;
@@ -25,43 +25,47 @@ h1 {
 h2, h3, h4, h5, h6 {
 	font-family: 'Merriweather', Georgia, Times, serif;
 	font-weight: 400;
+	line-height: 1.2em;
 }
 
 h2 {
 	font-size: 24pt;
-	margin: 1em 0 0 0;
+	margin: 0.8em 0 0 0;
 }
 
 h3 {
 	font-size: 20pt;
-	margin: 1em 0 0 0;
+	margin: 0.8em 0 0 0;
 }
 
 h4 {
 	font-size: 16pt;
-	margin: 1.3em 0 0 0;
+	margin: 1.1em 0 0 0;
 }
 
 h1#name {
 	font-family: 'Merriweather', Georgia, Times, serif;
-	font-size: 28pt;
-	line-height: 1em;
+	font-size: 26pt;
+	line-height: 0.98em;
 	text-transform: uppercase;
-	font-weight: 700;
-	letter-spacing: 0.02em;
+	font-weight: 900;
+	letter-spacing: 0;
 	margin: 0 -1rem 0 -1rem;
-	padding: 1rem 1rem 1rem 1rem;
-	background: rgba(39, 39, 39, 0.9);
+	padding: 0.5rem 1rem 0.5rem 1rem;
+	background: rgba(50, 50, 50, 0.9);
 	/*display: inline-block; */
 
 }
 
 div#navigation.home h1#name {
-	margin-top: 0;
+	/* margin-top: 0; */
 }
+
+.headshot { clip-path: circle(100px at center);}
 
 h1#name a, h1#name a:hover {
 	color: white;
+	display: block;
 	text-decoration: none;
 }
 
@@ -94,9 +98,9 @@ div.container {
 div#navigation.home ul, div#navigation ul {
 	font-family: 'Source Sans Pro', sans-serif;
 	text-transform: uppercase;
-	font-size: 22pt;
+	font-size: 20pt;
 	line-height: normal;
-	letter-spacing: 0.02em;
+	letter-spacing: 0.01em;
 	font-weight: 300;
 	list-style: none;
 	padding: 0 0 0.8rem 0;
@@ -311,7 +315,7 @@ div.altmetric-embed, div.altmetric-embed a {
 	}
 
 	div#navigation ul, div#navigation.home ul {
-		font-size: 28pt;
+		font-size: 20pt;
 	}
 
 	div#navigation.home h1#name {
@@ -320,7 +324,7 @@ div.altmetric-embed, div.altmetric-embed a {
  
 	div#navigation.home {
 		font-size: 42pt;
-		padding-bottom: 0.8em;
+		padding-bottom: 0.2em;
 	}
 
 	div#navigation ul li {
@@ -328,10 +332,10 @@ div.altmetric-embed, div.altmetric-embed a {
 	}
 
 	h1#name {
-		font-size: 42pt;
+		font-size: 28pt;
 		margin-top: 160px;
-		padding-top: 0.1em;
-		padding-bottom: 0.1em;
+		/* padding-top: 0.1em;*/
+		/* padding-bottom: 0;*/
 	    display: inline-block;
 	}
 
