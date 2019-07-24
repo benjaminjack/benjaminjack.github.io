@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css?family=Merriweather:400,700,900|Source+Sans+Pro:300,400');
+@import url('https://fonts.googleapis.com/css?family=Muli:400,700,900&display=swap');
 
 body {
-	font-family: 'Source Sans Pro', sans-serif;
+	font-family: 'Muli', sans-serif;
 	font-size: 12pt;
 	line-height: 1.5em;
 	margin: 0;
@@ -18,12 +18,12 @@ header {
 }
 
 h1 {
-	font-family: 'Merriweather', Georgia, Times, serif;
+	font-family: 'Muli', sans-serif;
 	font-weight: 700;
 }
 
 h2, h3, h4, h5, h6 {
-	font-family: 'Merriweather', Georgia, Times, serif;
+	font-family: 'Muli', sans-serif;
 	font-weight: 400;
 	line-height: 1.2em;
 }
@@ -44,16 +44,13 @@ h4 {
 }
 
 h1#name {
-	font-family: 'Merriweather', Georgia, Times, serif;
-	font-size: 26pt;
+	font-family: 'Muli', sans-serif;
+	font-size: 20pt;
 	line-height: 0.98em;
-	text-transform: uppercase;
 	font-weight: 900;
 	letter-spacing: 0;
-	margin: 0 -1rem 0 -1rem;
+	margin: 0.5rem -1rem 0 -1rem;
 	padding: 0.5rem 1rem 0.5rem 1rem;
-	background: rgba(50, 50, 50, 0.9);
-	/*display: inline-block; */
 
 }
 
@@ -64,8 +61,7 @@ div#navigation.home h1#name {
 .headshot { clip-path: circle(100px at center);}
 
 h1#name a, h1#name a:hover {
-	color: white;
-	display: block;
+	color: black;
 	text-decoration: none;
 }
 
@@ -78,7 +74,7 @@ hr {
 
 a {
 	text-decoration: none;
-	color: #E57124;
+	color: rgb(110, 36, 229);
 }
 
 a:hover {
@@ -91,20 +87,19 @@ p {
 
 div.container {
 	max-width: 800px;
-	padding: 0 .4em 0 .4em;
+	padding: 0 .5em 0 .5em;
 	margin: auto;
 }
 
 div#navigation.home ul, div#navigation ul {
 	font-family: 'Source Sans Pro', sans-serif;
-	text-transform: uppercase;
 	font-size: 20pt;
 	line-height: normal;
 	letter-spacing: 0.01em;
-	font-weight: 300;
+	font-weight: 700;
 	list-style: none;
 	padding: 0 0 0.8rem 0;
-	margin: 0 0 0 -1rem;
+	margin: 0 0 0 -0.5rem;
 	display: inline-block;
 	width: 100%;
 
@@ -112,14 +107,15 @@ div#navigation.home ul, div#navigation ul {
 
 div#navigation.home ul li, div#navigation ul li {
 	padding: 0;
-	margin: 0;
+	margin: 0.3rem 0;
 	background: rgba(255,255,255,0.8);
 }
 
 div#navigation.home ul li a, div#navigation ul li a {
 	text-decoration: none;
-	margin: 0;
-	padding: 0 1rem 0 1rem;
+	margin: 0.5rem 0.1rem 0 0;
+	padding: 0.15rem 0.5rem 0.15rem 0.5rem;
+	border-radius: 5px;
 }
 
 .red {
@@ -310,16 +306,10 @@ div.altmetric-embed, div.altmetric-embed a {
 	body {
 		font-size: 12pt;
 		line-height: 1.7em;
-		background: white url("img/pymol.jpg") no-repeat 90% top;
-		background-size: 700px;
 	}
 
 	div#navigation ul, div#navigation.home ul {
 		font-size: 20pt;
-	}
-
-	div#navigation.home h1#name {
-		margin-top: 160px;
 	}
  
 	div#navigation.home {
@@ -333,7 +323,7 @@ div.altmetric-embed, div.altmetric-embed a {
 
 	h1#name {
 		font-size: 28pt;
-		margin-top: 160px;
+		margin-top: 50px;
 		/* padding-top: 0.1em;*/
 		/* padding-bottom: 0;*/
 	    display: inline-block;
