@@ -348,6 +348,8 @@ div.altmetric-embed, div.altmetric-embed a {
 		padding-left: 2em;
 	}
 
+	.headshot { clip-path: circle(100px at center);}
+
 	dl.cv dt {
 		float: left;
 		width: 6em;
