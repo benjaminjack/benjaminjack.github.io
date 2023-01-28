@@ -1,8 +1,7 @@
 ---
-title: Hi, I'm Ben
 ---
 
-!["Benjamin Jack"](/headshot.jpg)
+<img src="/headshot-2.jpg" width="50%" style="margin: 16px auto;" />
 
 My name is Ben and I am a data scientist. I currently work at <a href="https://valkyrie.ai">Valkyrie Intelligence</a> based in Austin, Texas. I consider myself a data science generalist, so I do a bit of everything from backend data engineering to machine learning to building dashboards. I'm particularly interested in deep learning and its applications in computer vision and natural language processing.
 				
