@@ -1,7 +1,6 @@
 ---
-author: Benjamin R. Jack
-date: "2016-06-11T00:00:00Z"
 title: Embedding fonts into R-generated PDFs on OS X
+date: 2016-06-11
 ---
 
 I use R with ggplot2 to create publication-ready figures in PDF format. Using a combination of ggplot2 and cowplot, I rarely make any manual changes with Adobe Illustrator or any other vector-based editing tool. These script-generated PDF figures make it easy to modify my analyses without worrying about manually reformatting my figures. Unfortunately, when R generates a PDF, it does not embed the fonts. To understand why embedding fonts matters, compare the two plots below:
@@ -12,18 +11,18 @@ The plot on the left appears exactly as it should, with all the type rendered wi
 
 I wrote a short python script (adapted from [here](https://discussions.apple.com/message/28994467#message28994467)) that scans the working directory for PDFs, opens them in Preview, and re-saves them under the original filename. These re-saved PDF files have all fonts embedded. This script will only work on OS X, because it depends on OS X APIs.
 
-{{< highlight python >}}
+{% highlight python %}
 #!/usr/bin/python
 import sys
 from Quartz.PDFKit import PDFDocument
 from Foundation import NSURL
 for f in [ a.decode('utf-8') for a in sys.argv[1:] ]:
     PDFDocument.alloc().initWithURL_(NSURL.fileURLWithPath_(f)).writeToFile_(f)
-{{< / highlight >}}
+{% endhighlight %}
 
 Calling the above script (which I've saved as `embed_fonts.py`) from within R has the effect of silently embedding fonts into R-generated PDFs.
 
-{{< highlight R >}}
+{% highlight R %}
 library(ggplot2)
 library(cowplot)
 myplot <- ggplot(iris, aes(x=Sepal.Length, y=Petal.Length, color=Species)) +
@@ -33,6 +32,6 @@ myplot <- ggplot(iris, aes(x=Sepal.Length, y=Petal.Length, color=Species)) +
 save_plot("myplot.pdf", myplot)
 # Embed fonts into every PDF in current working directory
 system("./path/to/embed_fonts.py *.pdf")
-{{< / highlight >}}
+{% endhighlight %}
 
 Now your PDFs will appear the same across any system, even systems without Helvetica installed.

@@ -1,15 +1,6 @@
 ---
-author: Benjamin R. Jack
-date: "2018-02-02T00:00:00Z"
-excerpt: Last year I published a blog post that explained how to structure a Python
-  package with a C++ extension module. My goal was to craft a Python package that
-  leveraged C++ for performance and had an easily maintainable and testable structure.
-  Well, seven months later, I'm revisiting Python/C++ packaging. I'm now convinced
-  that the structure that I described in my original post is not ideal. This post
-  will lay out the problems I discovered with my prior approach, and a complete guide
-  to my new approach. I'll conclude with some thoughts on the big picture of working
-  on projects with mixed codebases.
 title: Hybrid Python/C++ packages, revisited
+date: 2018-02-02
 ---
 
 Last year I published a blog post that explained [how to structure a Python package with a C++ extension module](2017/06/12/python-cpp-tests.html). My goal was to craft a Python package that leveraged C++ for performance and had an easily maintainable and testable structure. Well, seven months later, I'm revisiting Python/C++ packaging. I'm now convinced that the structure that I described in my original post is not ideal. This post will lay out the problems I discovered with my prior approach, and explain my new approach. I'll conclude with some thoughts on the big picture of working on projects with mixed codebases.

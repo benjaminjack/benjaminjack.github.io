@@ -1,12 +1,6 @@
 ---
-author: Benjamin R. Jack
-date: "2016-01-02T00:00:00Z"
-excerpt: I recently wiped my Macbook Pro and reinstalled Mac OS X El Capitan. I did
-  this for several reasons, but mostly because I was thoroughly frustrated with MacPorts
-  and wanted to switch to Homebrew (more on that later). To cleanly rid my laptop
-  of MacPorts, I started with a fresh copy of El Capitan. This guide describes the
-  steps I took to configure El Capitan for biocomputing.
 title: Setting up El Capitan (or Sierra) for biocomputing
+date: 2017-06-12
 ---
 
 **Update (3/28/18):** _This post has been updated to reflect changes in how scientific software is distributed in Homebrew._
@@ -19,9 +13,9 @@ I recently wiped my Macbook Pro and reinstalled Mac OS X El Capitan. I did this 
 
 The Xcode Command Line Tools are provided by Apple and contain the necessary tools for compiling code and installing other software. Install Xcode Command Line Tools with the following command in the Terminal:
 
-{{< highlight bash >}}
+{% highlight bash %}
 xcode-select --install
-{{< / highlight >}}
+{% endhighlight %}
 
 Follow the prompts and accept the license agreement.
 
@@ -29,62 +23,62 @@ Follow the prompts and accept the license agreement.
 
 Homebrew is a package manager for OS X. I prefer Homebrew to MacPorts because of a variety of issues that I've had with MacPorts. The rest of this guide will assume that you have Homebrew installed, though you could just as easily use MacPorts to install git, Python, and R. To install Homebrew, run this command and follow the prompts:
 
-{{< highlight bash >}}
+{% highlight bash %}
 ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-{{< / highlight >}}
+{% endhighlight %}
 
 #### 3.  Install git for version control
 
 After Homebrew has been installed, installing other software is relatively simple. Git is a version control system commonly used with Github. Xcode tends to come with older versions of git and Apple is slow to keep git up-to-date. Rather than overwrite the system git installation, we'll install a new version of git via Homebrew:
 
-{{< highlight bash >}}
+{% highlight bash %}
 brew install git
-{{< / highlight >}}
+{% endhighlight %}
 
 #### 4.  Install Python
 
 Again, like git, the default Python installation in OS X also tends to be outdated. Let's install a separate, newer version of Python 2.7.x:
 
-{{< highlight bash >}}
+{% highlight bash %}
 brew install python
-{{< / highlight >}}
+{% endhighlight %}
 
 If you would like to install Python 3 instead, replace `python` in the above command with `python3`. Both Python 2 and Python 3 can be installed concurrently. Homebrew's version of Python comes with pip, a package manager specifically designed for Python libraries. Use pip to install a few Python libraries:
 
-{{< highlight bash >}}
+{% highlight bash %}
 pip install numpy # Vectors and matrices in Python
 pip install scipy # Other scientific computing tools
 pip install pandas # Dataframes in Python!
-{{< / highlight >}}
+{% endhighlight %}
 
 One of the most commonly used biocomputing Python libraries is Biopython. We'll install that next, again using pip:
 
-{{< highlight bash >}}
+{% highlight bash %}
 pip install biopython
-{{< / highlight >}}
+{% endhighlight %}
 
 IPython Notebook, another popular biocomputing tool, is now a part of the Jupyter Project. Installing Jupyter via pip will install IPython Notebook:
 
-{{< highlight bash >}}
+{% highlight bash %}
 pip install jupyter
-{{< / highlight >}}
+{% endhighlight %}
 
 #### 5.  Install R
 
 Run the following commands to install R:
 
-{{< highlight bash >}}
+{% highlight bash %}
 brew tap brewsci/science
 brew tap brewsci/bio
 brew cask install R
-{{< / highlight >}}
+{% endhighlight %}
 
 You will probably also want to install a few of Hadley Wickham's packages:
 
-{{< highlight bash >}}
+{% highlight bash %}
 R # Launch R
 > install.packages("tidyverse")
-{{< / highlight >}}
+{% endhighlight %}
 
 #### 6.  Install RStudio for R development
 
@@ -94,17 +88,17 @@ I normally avoid integrated development environments because they tend to be ove
 
 To export Rmarkdown documents as PDFs, which I often do to share analyses with colleagues, RStudio requires MacTeX. The installer for the full version of MacTeX is giant (~3GB), but worth it if you plan to share your work as a PDF. Unless you're experienced with MacTeX, go with the full MacTeX installation rather than BasicTeX. You can install MacTex by running:
 
-{{< highlight bash >}}
+{% highlight bash %}
 brew cask install mactex
-{{< / highlight >}}
+{% endhighlight %}
 
 #### 9.  Install Atom for general text-editing and scripting
 
 Atom is an excellent new text editor from the team behind Github. I now use Atom in place of both TextWrangler, which I used as a general purpose text editor, and PyCharm, which I used for Python development. Unlike TextWrangler (and Sublime Text which also has a large following), Atom is both free and open-source. I highly recommend it. Again, you can install Atom via brew:
 
-{{< highlight bash >}}
+{% highlight bash %}
 brew cask install atom
-{{< / highlight >}}
+{% endhighlight %}
 
 #### Wrap-up
 

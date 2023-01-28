@@ -1,7 +1,6 @@
 ---
-author: Benjamin R. Jack
-date: "2019-09-08T00:00:00Z"
 title: My journey into data science
+date: 2019-09-08
 ---
 
 I started my first full-time data science job about eight months ago, and getting here has certainly has been a learning experience! While the experience is still fresh in my mind, I wanted to share my thoughts. This post is a reflection on how I went from a PhD program in Cell and Molecular Biology to an industry data scientist.
