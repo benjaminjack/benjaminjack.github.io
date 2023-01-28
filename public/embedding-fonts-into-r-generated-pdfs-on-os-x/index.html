@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Your site description">
+    
+    <link rel="shortcut icon" href="https://benjack.io/favicon.ico">
+    
+    <link rel="stylesheet" href="/css/style.min.css">
+
+    <link rel="canonical" href="https://benjack.io/embedding-fonts-into-r-generated-pdfs-on-os-x/" />
+    <title>Embedding fonts into R-generated PDFs on OS X</title>
+</head>
+<body><header id="banner">
+    <h2><a href="https://benjack.io">Benjamin R Jack</a></h2>
+    <nav>
+        <ul>
+            <li>
+                <a href="/" title="posts">posts</a>
+            </li><li>
+                <a href="/about/" title="about">about</a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main id="content">
+<article>
+    <header id="post-header">
+        <h1>Embedding fonts into R-generated PDFs on OS X</h1>
+        <div>
+                <time>June 11, 2016</time>
+            </div>
+    </header><p>I use R with ggplot2 to create publication-ready figures in PDF format. Using a combination of ggplot2 and cowplot, I rarely make any manual changes with Adobe Illustrator or any other vector-based editing tool. These script-generated PDF figures make it easy to modify my analyses without worrying about manually reformatting my figures. Unfortunately, when R generates a PDF, it does not embed the fonts. To understand why embedding fonts matters, compare the two plots below:</p>
+<img src="/fonts-side-by-side.png" width="800" alt="A side-by-side comparison of a PDF with and without embedded fonts" />
+<p>The plot on the left appears exactly as it should, with all the type rendered with the Helvetica typeface. The plot on the right is a screenshot of a PDF rendered on a system that did not have Helvetica installed. Since R did not embed the fonts into the PDF, this system substitutes Helvetica with the closest font that it can find. The substitution is markedly different from the original Helvetica. Without embedded fonts, the same PDF renders very differently on different machines. Frustratingly, the systems that lack standard fonts like Helvetica tend to be archaic journal publishing systems. Overleaf also lacks the basic fonts to render PDFs correctly. To guarantee that PDFs render exactly the same across a variety of systems, we must embed the fonts into the PDF itself.</p>
+<p>I wrote a short python script (adapted from <a href="https://discussions.apple.com/message/28994467#message28994467">here</a>) that scans the working directory for PDFs, opens them in Preview, and re-saves them under the original filename. These re-saved PDF files have all fonts embedded. This script will only work on OS X, because it depends on OS X APIs.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="ch">#!/usr/bin/python</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">sys</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">Quartz.PDFKit</span> <span class="kn">import</span> <span class="n">PDFDocument</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">Foundation</span> <span class="kn">import</span> <span class="n">NSURL</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">[</span> <span class="n">a</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="p">]:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">PDFDocument</span><span class="o">.</span><span class="n">alloc</span><span class="p">()</span><span class="o">.</span><span class="n">initWithURL_</span><span class="p">(</span><span class="n">NSURL</span><span class="o">.</span><span class="n">fileURLWithPath_</span><span class="p">(</span><span class="n">f</span><span class="p">))</span><span class="o">.</span><span class="n">writeToFile_</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span></code></pre></div><p>Calling the above script (which I&rsquo;ve saved as <code>embed_fonts.py</code>) from within R has the effect of silently embedding fonts into R-generated PDFs.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-R" data-lang="R"><span class="line"><span class="cl"><span class="nf">library</span><span class="p">(</span><span class="n">ggplot2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nf">library</span><span class="p">(</span><span class="n">cowplot</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">myplot</span> <span class="o">&lt;-</span> <span class="nf">ggplot</span><span class="p">(</span><span class="n">iris</span><span class="p">,</span> <span class="nf">aes</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">Sepal.Length</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">Petal.Length</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">Species</span><span class="p">))</span> <span class="o">+</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">geom_point</span><span class="p">()</span> <span class="o">+</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">labs</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s">&#34;Sepal Length&#34;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s">&#34;Petal Length&#34;</span><span class="p">)</span> <span class="o">+</span>
+</span></span><span class="line"><span class="cl">  <span class="nf">ggtitle</span><span class="p">(</span><span class="s">&#34;Plants&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nf">save_plot</span><span class="p">(</span><span class="s">&#34;myplot.pdf&#34;</span><span class="p">,</span> <span class="n">myplot</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># Embed fonts into every PDF in current working directory</span>
+</span></span><span class="line"><span class="cl"><span class="nf">system</span><span class="p">(</span><span class="s">&#34;./path/to/embed_fonts.py *.pdf&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>Now your PDFs will appear the same across any system, even systems without Helvetica installed.</p>
+</article>
+
+        </main><footer id="footer">
+    Copyright © 2023 Benjamin Jack
+</footer>
+</body>
+</html>

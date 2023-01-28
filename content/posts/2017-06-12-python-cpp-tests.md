@@ -1,6 +1,6 @@
 ---
 title: Building and testing a hybrid Python/C++ package
-date: 2019-09-08
+date: 2017-06-12
 ---
 
 **UPDATE** (2/2/2018): I now think there are better ways to structure a Python package that contains both Python and C++ source code. Please see my [follow-up post](/2018/02/02/python-cpp-revisited.html). I'm leaving this post here for posterity. 

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Your site description">
+    
+    <link rel="shortcut icon" href="https://benjack.io/favicon.ico">
+    
+    <link rel="stylesheet" href="/css/style.min.css">
+
+    <link rel="canonical" href="https://benjack.io/hybrid-python/c-packages-revisited/" />
+    <title>Hybrid Python/C&#43;&#43; packages, revisited</title>
+</head>
+<body><header id="banner">
+    <h2><a href="https://benjack.io">Benjamin R Jack</a></h2>
+    <nav>
+        <ul>
+            <li>
+                <a href="/" title="posts">posts</a>
+            </li><li>
+                <a href="/about/" title="about">about</a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main id="content">
+<article>
+    <header id="post-header">
+        <h1>Hybrid Python/C&#43;&#43; packages, revisited</h1>
+        <div>
+                <time>February 2, 2018</time>
+            </div>
+    </header><p>Last year I published a blog post that explained <a href="2017/06/12/python-cpp-tests.html">how to structure a Python package with a C++ extension module</a>. My goal was to craft a Python package that leveraged C++ for performance and had an easily maintainable and testable structure. Well, seven months later, I&rsquo;m revisiting Python/C++ packaging. I&rsquo;m now convinced that the structure that I described in my original post is not ideal. This post will lay out the problems I discovered with my prior approach, and explain my new approach. I&rsquo;ll conclude with some thoughts on the big picture of working on projects with mixed codebases.</p>
+<p>The first part of this post assumes familiarity with <a href="2017/06/12/python-cpp-tests.html">my last blog post</a>. If you just want to know how to set up your package, you can skip ahead to Part 2. If you&rsquo;re even more impatient, you can go right to the <a href="https://github.com/benjaminjack/python_cpp_example">complete working example on Github</a>.</p>
+<h3 id="part-1-polluted-namespaces-and-import-madness">Part 1: Polluted namespaces and import madness</h3>
+<p>Python&rsquo;s package import and namespace system is complex, to say the least. <a href="http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html">There are many pitfalls</a>. Recall the repository directory structure that I described in my <a href="2017/06/12/python-cpp-tests.html">previous post</a>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">python_cpp_example
+</span></span><span class="line"><span class="cl">├── CMakeLists.txt
+</span></span><span class="line"><span class="cl">├── LICENSE
+</span></span><span class="line"><span class="cl">├── README.md
+</span></span><span class="line"><span class="cl">├── build/
+</span></span><span class="line"><span class="cl">├── lib
+</span></span><span class="line"><span class="cl">│   ├── catch/
+</span></span><span class="line"><span class="cl">│   └── pybind11/
+</span></span><span class="line"><span class="cl">├── python_cpp_example
+</span></span><span class="line"><span class="cl">│   ├── __init__.py
+</span></span><span class="line"><span class="cl">│   ├── bindings.cpp
+</span></span><span class="line"><span class="cl">│   ├── math.cpp
+</span></span><span class="line"><span class="cl">│   └── math.hpp
+</span></span><span class="line"><span class="cl">├── setup.py
+</span></span><span class="line"><span class="cl">└── tests
+</span></span><span class="line"><span class="cl">    ├── __init__.py
+</span></span><span class="line"><span class="cl">    ├── math_test.py
+</span></span><span class="line"><span class="cl">    ├── test_main.cpp
+</span></span><span class="line"><span class="cl">    └── test_math.cpp
+</span></span></code></pre></div><p>This directory structure is <a href="http://docs.python-guide.org/en/latest/writing/structure/">common</a>. The root directory <code>python_cpp_example</code> contains a <code>README.md</code>, <code>setup.py</code>, and other files that support the <code>python_cpp_example</code> package. The package source code lives in a subdirectory also named <code>python_cpp_example</code>. Strictly speaking, a Python package is a collection of Python modules in a directory with an <code>__init__.py</code> file that tells Python, &ldquo;Hey, this is a package.&rdquo; So in this example, the <code>python_cpp_example</code> <em>subdirectory</em> is really the package.</p>
+<p>When actively developing a Python package, developers commonly install packages in development mode so they can make changes to the source code without having to reinstall the package after every change. In our example above, running <code>setup.py develop</code> will add the <code>python_cpp_example</code> package to the global Python import namespace. This behavior is desirable so that we can run <code>import python_cpp_example</code> from anywhere. However, without specifying in <code>setup.py</code> exactly where our package source code lives, running <code>setup.py develop</code> will add <em>any</em> subdirectory with an <code>__init__.py</code> to the global namespace. Notice a problem with the directory structure above? The <code>tests</code> directory also has an <code>__init__.py</code>, making it a package that <code>setuptools</code> will install. Running <code>setup.py develop</code> then makes this possible:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">tests</span>  <span class="c1"># Uh-oh</span>
+</span></span><span class="line"><span class="cl"><span class="n">tests</span><span class="o">.</span><span class="n">test_math</span><span class="o">.</span><span class="n">test_add</span><span class="p">()</span>
+</span></span></code></pre></div><p>We&rsquo;ve polluted the global package namespace with a generic-sounding <code>tests</code> package. This is definitely not what we want. So what can we do? One option would be to never install our package in development mode, but this is a fragile solution. Our package should behave the same whether it is installed into <code>site-packages/</code> or in development mode. The safer option is to change the directory structure and specify source directories in <code>setup.py</code> to proactively avoid import problems.</p>
+<h3 id="part-2-a-better-package-structure">Part 2: A better package structure</h3>
+<p>Many others have written about <a href="https://www.google.com/search?q=python+package+structure">how to structure a Python package</a>. The most <a href="https://blog.ionelmc.ro/2014/05/25/python-packaging/">thorough and well-reasoned post</a> I&rsquo;ve read suggests the following layout:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">python_cpp_example
+</span></span><span class="line"><span class="cl">├── setup.py
+</span></span><span class="line"><span class="cl">├── src
+</span></span><span class="line"><span class="cl">│   └── python_cpp_example/  <span class="c1"># Source code goes under this directory</span>
+</span></span><span class="line"><span class="cl">└── tests/  <span class="c1"># Tests live here</span>
+</span></span></code></pre></div><p>This layout guards against some of the import problems I described in Part 1. To make sure nothing outside of <code>src/</code> gets added to the global package namespace, add these two arguments to <code>setup()</code> in your <code>setup.py</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">setuptools</span> <span class="kn">import</span> <span class="n">find_packages</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">setup</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="o">...</span>
+</span></span><span class="line"><span class="cl">    <span class="n">packages</span><span class="o">=</span><span class="n">find_packages</span><span class="p">(</span><span class="s1">&#39;src&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">package_dir</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;&#39;</span><span class="p">:</span><span class="s1">&#39;src&#39;</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span></code></pre></div><p>This guarantees that <code>tests</code> will never be accidentally added to the global package namespace. We will construct our hybrid Python/C++ package using this layout. The following sections follow closely with my <a href="2017/06/12/python-cpp-tests.html">prior blog post</a>, but adapted to this new directory structure.</p>
+<h4 id="a-simple-package-with-a-pybind11-based-c-extension-module">A simple package with a <code>pybind11</code>-based C++ extension module</h4>
+<p>To start, we&rsquo;ll create a simple <code>pybind11</code>-based Python module. <a href="https://github.com/pybind/pybind11"><code>Pybind11</code></a> is an excellent header-only C++ library that makes it easy to write Python wrappers for any C++ code and bundle them into an extension module. The extension module will share the same name as our package, <code>python_cpp_example</code>. The directory structure for our package is similar to the one described above, with a few additions, notably <code>lib</code>, <code>build</code>, and <code>CMakeLists.txt</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">python_cpp_example
+</span></span><span class="line"><span class="cl">├── build/  <span class="c1"># Build directory for C++ extension modules</span>
+</span></span><span class="line"><span class="cl">├── lib/  <span class="c1"># External C++ libraries</span>
+</span></span><span class="line"><span class="cl">├── setup.py
+</span></span><span class="line"><span class="cl">├── src
+</span></span><span class="line"><span class="cl">│   └── python_cpp_example  <span class="c1"># Python and C++ source code</span>
+</span></span><span class="line"><span class="cl">│       ├── __init__.py
+</span></span><span class="line"><span class="cl">│       └── hello.py
+</span></span><span class="line"><span class="cl">└── tests/  <span class="c1"># Python and C++ unit tests</span>
+</span></span></code></pre></div><p>We&rsquo;ll also assume that our package already contains one module called <code>hello.py</code>.</p>
+<p><code>hello.py</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">say_hello</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;Hello world!&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>Make sure that the <code>src/python_cpp_example</code> directory contains a blank <code>__init__.py</code> so Python knows that this directory is a package. We will place our C++ source code in the same directory as our Python code.</p>
+<p>The <code>build</code> directory will contain compiled code generated by our build system. The <code>lib</code> directory will contain the C++ libraries needed for our package. Under <code>lib/</code>, download and extract the latest <code>pybind11</code> release by running the following commands (assuming you&rsquo;re working in a *nix environment):</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">wget https://github.com/pybind/pybind11/archive/v2.1.1.tar.gz
+</span></span><span class="line"><span class="cl">tar -xvf v2.1.1.tar.gz
+</span></span><span class="line"><span class="cl"><span class="c1"># Copy pybind11 library into our project</span>
+</span></span><span class="line"><span class="cl">cp -r pybind11-2.1.1 python_cpp_example/lib/pybind11
+</span></span></code></pre></div><p>Now we&rsquo;ll write two simple C++ functions and then wrap them in Python with <code>pybind11</code>. Under <code>src/python_cpp_example</code>, create three files: <code>math.hpp</code>, <code>math.cpp</code>, and <code>bindings.cpp</code>.</p>
+<p><code>math.hpp</code> and <code>math.cpp</code> are simple C++ header and definition files:</p>
+<p><code>math.hpp</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cm">/*! Add two integers
+</span></span></span><span class="line"><span class="cl"><span class="cm">    \param i an integer
+</span></span></span><span class="line"><span class="cl"><span class="cm">    \param j another integer
+</span></span></span><span class="line"><span class="cl"><span class="cm">*/</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="kt">int</span> <span class="n">j</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="cm">/*! Subtract one integer from another 
+</span></span></span><span class="line"><span class="cl"><span class="cm">    \param i an integer
+</span></span></span><span class="line"><span class="cl"><span class="cm">    \param j an integer to subtract from \p i
+</span></span></span><span class="line"><span class="cl"><span class="cm">*/</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">subtract</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="kt">int</span> <span class="n">j</span><span class="p">);</span>
+</span></span></code></pre></div><p><code>math.cpp</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;math.hpp&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">add</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="kt">int</span> <span class="n">j</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">subtract</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="kt">int</span> <span class="n">j</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">i</span> <span class="o">-</span> <span class="n">j</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>Lastly, we&rsquo;ll define our Python wrappers in a file called <code>bindings.cpp</code>. See the <a href="http://pybind11.readthedocs.io/en/stable/basics.html"><code>pybind11</code> tutorial</a> for a detailed explanation of what each line of code does here.</p>
+<p><code>bindings.cpp</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;pybind11/pybind11.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;math.hpp&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="k">namespace</span> <span class="n">py</span> <span class="o">=</span> <span class="n">pybind11</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">PYBIND11_PLUGIN</span><span class="p">(</span><span class="n">python_cpp_example</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">py</span><span class="o">::</span><span class="n">module</span> <span class="n">m</span><span class="p">(</span><span class="s">&#34;python_cpp_example&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">m</span><span class="p">.</span><span class="n">def</span><span class="p">(</span><span class="s">&#34;add&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">add</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">m</span><span class="p">.</span><span class="n">def</span><span class="p">(</span><span class="s">&#34;subtract&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">subtract</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">m</span><span class="p">.</span><span class="n">ptr</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>We&rsquo;ve now defined two functions in C++, <code>add</code> and <code>subtract</code>, and written the code to wrap them in a Python module called <code>python_cpp_example</code>. Your directory structure should now look something like this:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">python_cpp_example
+</span></span><span class="line"><span class="cl">├── build
+</span></span><span class="line"><span class="cl">├── lib
+</span></span><span class="line"><span class="cl">│   └── pybind11
+</span></span><span class="line"><span class="cl">├── src
+</span></span><span class="line"><span class="cl">│   └── python_cpp_example
+</span></span><span class="line"><span class="cl">│       ├── __init__.py
+</span></span><span class="line"><span class="cl">│       ├── hello.py
+</span></span><span class="line"><span class="cl">│       ├── bindings.cpp
+</span></span><span class="line"><span class="cl">│       ├── math.cpp
+</span></span><span class="line"><span class="cl">│       └── math.hpp
+</span></span><span class="line"><span class="cl">├── setup.py
+</span></span><span class="line"><span class="cl">└── tests
+</span></span></code></pre></div><p>Next we have to set up our build environment. We&rsquo;ll use CMake to build the C++ extension modules in our package.</p>
+<h4 id="configuring-the-build-environment">Configuring the build environment</h4>
+<p>We could have written a Makefile directly to build our package, but using CMake simplifies building <code>pybind11</code>-based modules. (If you don&rsquo;t believe me, check out the Makefile that CMake generates.) Using CMake will also make it easier to add C++ unit tests later.</p>
+<p>First make sure that you have <a href="https://cmake.org/">CMake</a> installed. On macOS, installation can be done with <a href="https://brew.sh"><code>brew</code></a> by running the following command:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">&gt; brew install cmake
+</span></span></code></pre></div><p>If you are not familiar with CMake, I suggest skimming through the <a href="https://cmake.org/cmake-tutorial/">CMake introductory tutorial</a>. We&rsquo;re going to use a small set of CMake functions here, so even if you&rsquo;re new to CMake, the code should be easy to follow.</p>
+<p>To start, we&rsquo;ll define a project, set the source directory, and define a list of C++ sources <em>without</em> <code>bindings.cpp</code>. (This list will come in handy later when we want build C++ tests independently of any Python bindings.) Create a <code>CMakeLists.txt</code> file in the package&rsquo;s root directory and add the following:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">2.8.12</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">project</span><span class="p">(</span><span class="s">python_cpp_example</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># Set source directory
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">set</span><span class="p">(</span><span class="s">SOURCE_DIR</span> <span class="s2">&#34;src/python_cpp_example&#34;</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># Tell CMake that headers are also in SOURCE_DIR
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">include_directories</span><span class="p">(</span><span class="o">${</span><span class="nv">SOURCE_DIR</span><span class="o">}</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">set</span><span class="p">(</span><span class="s">SOURCES</span> <span class="s2">&#34;${SOURCE_DIR}/math.cpp&#34;</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></div><p>Next, we&rsquo;ll tell CMake to add the <code>pybind11</code> directory to our project and define an extension module. This time, make sure <code>bindings.cpp</code> is added to the sources list. Add the following to <code>CMakeLists.txt</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="c"># Generate Python module
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">add_subdirectory</span><span class="p">(</span><span class="s">lib/pybind11</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">pybind11_add_module</span><span class="p">(</span><span class="s">python_cpp_example</span> <span class="o">${</span><span class="nv">SOURCES</span><span class="o">}</span> <span class="s2">&#34;${SOURCE_DIR}/bindings.cpp&#34;</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></div><p>That&rsquo;s all we need to instruct CMake to build our extension module. Rather than run CMake directly, however, we&rsquo;re going to configure Python&rsquo;s built-in <a href="http://setuptools.readthedocs.io/en/latest/"><code>setuptools</code></a> to build our package automatically via <code>setup.py</code>.</p>
+<h4 id="building-with-setuptools">Building with <code>setuptools</code></h4>
+<p>On its own, <code>setup.py</code> will not build an extension module with a CMake-based build system. We have to define a custom build command. The code I&rsquo;m presenting here was largely taken from the <a href="https://github.com/pybind/cmake_example"><code>pybind11</code>&rsquo;s CMake example repository</a>. I won&rsquo;t explain every line of the code here, but in brief, we&rsquo;re defining two classes that will create a temporary build directory and then call CMake to build any extension modules in our package. Add these two class definitions to <code>setup.py</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">re</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">sys</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">sysconfig</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">platform</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">subprocess</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">distutils.version</span> <span class="kn">import</span> <span class="n">LooseVersion</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">setuptools</span> <span class="kn">import</span> <span class="n">setup</span><span class="p">,</span> <span class="n">find_packages</span><span class="p">,</span> <span class="n">Extension</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">setuptools.command.build_ext</span> <span class="kn">import</span> <span class="n">build_ext</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">CMakeExtension</span><span class="p">(</span><span class="n">Extension</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">sourcedir</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Extension</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="p">[])</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">sourcedir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">sourcedir</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">CMakeBuild</span><span class="p">(</span><span class="n">build_ext</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">out</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s1">&#39;cmake&#39;</span><span class="p">,</span> <span class="s1">&#39;--version&#39;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;CMake must be installed to build the following extensions: &#34;</span> <span class="o">+</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;, &#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">extensions</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&#34;Windows&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cmake_version</span> <span class="o">=</span> <span class="n">LooseVersion</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;version\s*([\d.]+)&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                                         <span class="n">out</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">cmake_version</span> <span class="o">&lt;</span> <span class="s1">&#39;3.1.0&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&#34;CMake &gt;= 3.1.0 is required on Windows&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">extensions</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="bp">self</span><span class="o">.</span><span class="n">build_extension</span><span class="p">(</span><span class="n">ext</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">build_extension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ext</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">extdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_ext_fullpath</span><span class="p">(</span><span class="n">ext</span><span class="o">.</span><span class="n">name</span><span class="p">)))</span>
+</span></span><span class="line"><span class="cl">        <span class="n">cmake_args</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=&#39;</span> <span class="o">+</span> <span class="n">extdir</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                      <span class="s1">&#39;-DPYTHON_EXECUTABLE=&#39;</span> <span class="o">+</span> <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">cfg</span> <span class="o">=</span> <span class="s1">&#39;Debug&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="k">else</span> <span class="s1">&#39;Release&#39;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">build_args</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;--config&#39;</span><span class="p">,</span> <span class="n">cfg</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&#34;Windows&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cmake_args</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_</span><span class="si">{}</span><span class="s1">=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">                <span class="n">cfg</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">                <span class="n">extdir</span><span class="p">)]</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">cmake_args</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;-A&#39;</span><span class="p">,</span> <span class="s1">&#39;x64&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="n">build_args</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="s1">&#39;/m&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cmake_args</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;-DCMAKE_BUILD_TYPE=&#39;</span> <span class="o">+</span> <span class="n">cfg</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="n">build_args</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="s1">&#39;-j2&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="n">env</span><span class="p">[</span><span class="s1">&#39;CXXFLAGS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> -DVERSION_INFO=</span><span class="se">\\</span><span class="s1">&#34;</span><span class="si">{}</span><span class="se">\\</span><span class="s1">&#34;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;CXXFLAGS&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">            <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="o">.</span><span class="n">get_version</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_temp</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_temp</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">([</span><span class="s1">&#39;cmake&#39;</span><span class="p">,</span> <span class="n">ext</span><span class="o">.</span><span class="n">sourcedir</span><span class="p">]</span> <span class="o">+</span> <span class="n">cmake_args</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                              <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">build_temp</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">([</span><span class="s1">&#39;cmake&#39;</span><span class="p">,</span> <span class="s1">&#39;--build&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">build_args</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                              <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">build_temp</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">()</span>  <span class="c1"># Add an empty line for cleaner output</span>
+</span></span></code></pre></div><p>Next, at the bottom of <code>setup.py</code>, modify <code>setup()</code> with the newly-defined custom extension builder:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">setup</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;python_cpp_example&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">version</span><span class="o">=</span><span class="s1">&#39;0.1&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">author</span><span class="o">=</span><span class="s1">&#39;Benjamin Jack&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">author_email</span><span class="o">=</span><span class="s1">&#39;benjamin.r.jack@gmail.com&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">description</span><span class="o">=</span><span class="s1">&#39;A hybrid Python/C++ test project&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">long_description</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># tell setuptools to look for any packages under &#39;src&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">packages</span><span class="o">=</span><span class="n">find_packages</span><span class="p">(</span><span class="s1">&#39;src&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># tell setuptools that all packages will be under the &#39;src&#39; directory</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># and nowhere else</span>
+</span></span><span class="line"><span class="cl">    <span class="n">package_dir</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;&#39;</span><span class="p">:</span><span class="s1">&#39;src&#39;</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># add an extension module named &#39;python_cpp_example&#39; to the package </span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># &#39;python_cpp_example&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ext_modules</span><span class="o">=</span><span class="p">[</span><span class="n">CMakeExtension</span><span class="p">(</span><span class="s1">&#39;python_cpp_example/python_cpp_example&#39;</span><span class="p">)],</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># add custom build_ext command</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cmdclass</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">build_ext</span><span class="o">=</span><span class="n">CMakeBuild</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">zip_safe</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span></code></pre></div><p>Now you should be able to run <code>python3 setup.py develop</code> from within your package&rsquo;s root directory and you will see an extension module generated under <code>src/python_cpp_example/</code>. You can now import and use your new package.</p>
+<p>Up until now, I have largely followed along with the <a href="http://pybind11.readthedocs.io/en/stable/basics.html"><code>pybind11</code> tutorial</a> and <a href="https://github.com/pybind/cmake_example"><code>pybind11</code>&rsquo;s CMake example repository</a>. In the following sections, I will describe how to add unit testing within this set up.</p>
+<h4 id="writing-python-unit-tests">Writing Python unit tests</h4>
+<p>We&rsquo;ll begin by adding Python unit tests using Python&rsquo;s built-in <code>unittest</code> module. Under <code>tests/</code> add an empty file called <code>__init__.py</code>. This file will stay empty, but it is required for <code>unittest</code>&rsquo;s automatic test discovery.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">python_cpp_example/
+</span></span><span class="line"><span class="cl">├── CMakeLists.txt
+</span></span><span class="line"><span class="cl">├── build/
+</span></span><span class="line"><span class="cl">├── lib
+</span></span><span class="line"><span class="cl">│   ├── catch/
+</span></span><span class="line"><span class="cl">│   └── pybind11/
+</span></span><span class="line"><span class="cl">├── setup.py
+</span></span><span class="line"><span class="cl">├── src
+</span></span><span class="line"><span class="cl">│   └── python_cpp_example
+</span></span><span class="line"><span class="cl">│       ├── __init__.py
+</span></span><span class="line"><span class="cl">│       ├── hello.py
+</span></span><span class="line"><span class="cl">│       ├── bindings.cpp
+</span></span><span class="line"><span class="cl">│       ├── math.cpp
+</span></span><span class="line"><span class="cl">│       ├── math.hpp
+</span></span><span class="line"><span class="cl">│       └── python_cpp_example.cpython-36m-darwin.so
+</span></span><span class="line"><span class="cl">└── tests
+</span></span><span class="line"><span class="cl">    └── __init__.py
+</span></span></code></pre></div><p>In the same <code>tests</code> directory, add a file <code>math_test.py</code> with a few simple unit tests.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">unittest</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># import our `pybind11`-based extension module from package python_cpp_example</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">python_cpp_example</span> <span class="kn">import</span> <span class="n">python_cpp_example</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">MainTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">test_add</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># test that 1 + 1 = 2</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">python_cpp_example</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">test_subtract</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># test that 1 - 1 = 0</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">python_cpp_example</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+</span></span></code></pre></div><p>Add the following <code>test_suite</code> keyword argument to <code>setup()</code> in your <code>setup.py</code> script:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">setup</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="o">...</span>
+</span></span><span class="line"><span class="cl">    <span class="n">test_suite</span><span class="o">=</span><span class="s1">&#39;tests&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span></code></pre></div><p>That&rsquo;s all you need for Python unit tests. You can add as many test files as you want, and each one should define a class that extends <code>unittest.TestCase</code>. As long as all of your files have a <code>_test.py</code> suffix, <code>unittest</code> will automatically discover them. Run <code>python3 setup.py test</code> and you should get output that looks like this:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">&gt; python3 setup.py <span class="nb">test</span>
+</span></span><span class="line"><span class="cl">test_add <span class="o">(</span>tests.math_test.MainTest<span class="o">)</span> ... ok
+</span></span><span class="line"><span class="cl">test_subtract <span class="o">(</span>tests.math_test.MainTest<span class="o">)</span> ... ok
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">----------------------------------------------------------------------
+</span></span><span class="line"><span class="cl">Ran <span class="m">2</span> tests in 0.001s
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">OK
+</span></span></code></pre></div><p>Python&rsquo;s built-in <code>unittest</code> module is a powerful unit testing framework with a variety of built in assertions. You can read more about <code>unittest</code> in the <a href="https://docs.python.org/3/library/unittest.html">official Python documentation</a>.</p>
+<h4 id="writing-c-unit-tests-with-catch">Writing C++ unit tests with <code>catch</code></h4>
+<p>Unlike Python, C++ needs an external library to enable unit testing. I&rsquo;ve chosen to use <a href="http://catch-lib.net"><code>catch</code></a> for its concise syntax and its header-only structure. Download and extract <code>catch</code> in the <code>lib</code> directory of your package. On a *nix system, you could run the following:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nb">cd</span> lib
+</span></span><span class="line"><span class="cl">wget https://github.com/philsquared/Catch/archive/v1.9.4.tar.gz
+</span></span><span class="line"><span class="cl">tar -xvf v1.9.4.tar.gz
+</span></span><span class="line"><span class="cl"><span class="c1"># Copy catch library into our project</span>
+</span></span><span class="line"><span class="cl">cp -r catch-1.9.4 python_cpp_example/lib/catch 
+</span></span></code></pre></div><p>Similar to Python&rsquo;s <code>__init__.py</code>, <code>catch</code> requires an initialization file that we&rsquo;ll name <code>test_main.cpp</code>. This configuration file must contain two specific lines and nothing else. Under the <code>tests</code> directory, add the following file:</p>
+<p><code>test_main.cpp</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#define CATCH_CONFIG_MAIN
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;catch.hpp&gt;</span><span class="cp">
+</span></span></span></code></pre></div><p>Now we&rsquo;ll make a file with two simple unit tests. This time I&rsquo;m using a <code>test_</code> prefix (rather than a <code>_test.py</code> suffix) to easily distinguish between Python unit tests and C++ unit tests without looking at the file extension. Add the following to a file named <code>test_math.cpp</code> in the <code>tests</code> directory:</p>
+<p><code>test_math.cpp</code></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;catch.hpp&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;math.hpp&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="n">TEST_CASE</span><span class="p">(</span><span class="s">&#34;Addition and subtraction&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">REQUIRE</span><span class="p">(</span><span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">REQUIRE</span><span class="p">(</span><span class="n">subtract</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>These tests are analogous to the Python tests in the previous section. Normally, I would not unit test both the <code>pybind11</code> Python wrappers and the underlying C++ definitions for such simple functions. However, you can imagine an instance in which you didn&rsquo;t want to expose all of your C++ code with Python wrappers, but you still wanted to unit test that C++ code. Likewise, the Python wrappers can get quite complex and it may be useful to test your C++ code independently of the wrapping code. I&rsquo;ll revisit the topic of unit testing at the end of this post.</p>
+<p>Your directory structure should now look something like this:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">python_cpp_example/
+</span></span><span class="line"><span class="cl">├── CMakeLists.txt
+</span></span><span class="line"><span class="cl">├── build
+</span></span><span class="line"><span class="cl">│   └── temp.macosx-10.12-x86_64-3.6
+</span></span><span class="line"><span class="cl">├── lib
+</span></span><span class="line"><span class="cl">│   ├── catch/
+</span></span><span class="line"><span class="cl">│   └── pybind11/
+</span></span><span class="line"><span class="cl">├── src
+</span></span><span class="line"><span class="cl">│   └── python_cpp_example
+</span></span><span class="line"><span class="cl">│       ├── __init__.py
+</span></span><span class="line"><span class="cl">│       ├── hello.py
+</span></span><span class="line"><span class="cl">│       ├── bindings.cpp
+</span></span><span class="line"><span class="cl">│       ├── math.cpp
+</span></span><span class="line"><span class="cl">│       ├── math.hpp
+</span></span><span class="line"><span class="cl">│       └── python_cpp_example.cpython-36m-darwin.so
+</span></span><span class="line"><span class="cl">├── setup.py
+</span></span><span class="line"><span class="cl">└── tests
+</span></span><span class="line"><span class="cl">    ├── __init__.py
+</span></span><span class="line"><span class="cl">    ├── math_test.py
+</span></span><span class="line"><span class="cl">    ├── test_main.cpp
+</span></span><span class="line"><span class="cl">    └── test_math.cpp
+</span></span></code></pre></div><p>Lastly, we need to instruct CMake that we&rsquo;ve added C++ unit tests. We&rsquo;ll add <code>test_main.cpp</code> and <code>test_math.cpp</code> to a <code>TESTS</code> variable. Then we&rsquo;ll include the <code>catch</code> library and define an executable <code>python_cpp_example_test</code>. Add the following to your <code>CMakeLists.txt</code> file:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cmake" data-lang="cmake"><span class="line"><span class="cl"><span class="nb">SET</span><span class="p">(</span><span class="s">TEST_DIR</span> <span class="s2">&#34;tests&#34;</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">SET</span><span class="p">(</span><span class="s">TESTS</span> <span class="o">${</span><span class="nv">SOURCES</span><span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;${TEST_DIR}/test_main.cpp&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;${TEST_DIR}/test_math.cpp&#34;</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># Generate a test executable
+</span></span></span><span class="line"><span class="cl"><span class="c"></span><span class="nb">include_directories</span><span class="p">(</span><span class="s">lib/catch/include</span><span class="p">)</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="nb">add_executable</span><span class="p">(</span><span class="s2">&#34;${PROJECT_NAME}_test&#34;</span> <span class="o">${</span><span class="nv">TESTS</span><span class="o">}</span><span class="p">)</span><span class="err">
+</span></span></span></code></pre></div><p>Now run <code>python3 ./setup.py develop</code> and if you navigate to <code>build/temp.*</code> (e.g., <code>build/temp.macosx-10.12-x86_64-3.6</code> on my system), you should see an executable <code>python_cpp_example_test</code>. Running this executable will execute the <code>catch</code> unit tests. Rather than run this executable ourselves, however, we will move the executable to somewhere more convenient and use <code>setuptools</code> to execute it along side our Python unit tests.</p>
+<h4 id="using-pythons-unittest-to-execute-c-catch-tests">Using Python&rsquo;s <code>unittest</code> to execute C++ <code>catch</code> tests</h4>
+<p>To run our C++ unit tests along side the Python tests, we&rsquo;re going to call the <code>python_cpp_example_test</code> executable from a Python unit test. This requires two steps: first moving the <code>python_cpp_example_test</code> executable from <code>build/</code> to <code>tests/</code>, then writing a simple <code>unittest</code> test that calls the executable.</p>
+<p>First, add this <code>copy_test_file()</code> function to the <code>CMakeBuild</code> class in <code>setup.py</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">copyfile</span><span class="p">,</span> <span class="n">copymode</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">CMakeBuild</span><span class="p">(</span><span class="n">build_ext</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="o">...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">build_extension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ext</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="o">...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">copy_test_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src_file</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;&#39;&#39;
+</span></span></span><span class="line"><span class="cl"><span class="s1">        Copy ``src_file`` to `tests/bin` directory, ensuring parent directory 
+</span></span></span><span class="line"><span class="cl"><span class="s1">        exists. Messages like `creating directory /path/to/package` and
+</span></span></span><span class="line"><span class="cl"><span class="s1">        `copying directory /src/path/to/package -&gt; path/to/package` are 
+</span></span></span><span class="line"><span class="cl"><span class="s1">        displayed on standard output. Adapted from scikit-build.
+</span></span></span><span class="line"><span class="cl"><span class="s1">        &#39;&#39;&#39;</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Create directory if needed</span>
+</span></span><span class="line"><span class="cl">        <span class="n">dest_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span> <span class="s1">&#39;tests&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">dest_dir</span> <span class="o">!=</span> <span class="s2">&#34;&#34;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dest_dir</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;creating directory </span><span class="si">{}</span><span class="s2">&#34;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dest_dir</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dest_dir</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># Copy file</span>
+</span></span><span class="line"><span class="cl">        <span class="n">dest_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dest_dir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">src_file</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;copying </span><span class="si">{}</span><span class="s2"> -&gt; </span><span class="si">{}</span><span class="s2">&#34;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">src_file</span><span class="p">,</span> <span class="n">dest_file</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="n">copyfile</span><span class="p">(</span><span class="n">src_file</span><span class="p">,</span> <span class="n">dest_file</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">copymode</span><span class="p">(</span><span class="n">src_file</span><span class="p">,</span> <span class="n">dest_file</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">...</span> 
+</span></span></code></pre></div><p>Then call <code>copy_test_file()</code> from within <code>CMakeBuild.build_extension()</code>.</p>
+<p><code>setup.py</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">CMakeBuild</span><span class="p">(</span><span class="n">build_ext</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="o">...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">build_extension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ext</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="o">...</span> <span class="c1"># There is more code here not shown</span>
+</span></span><span class="line"><span class="cl">        <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">([</span><span class="s1">&#39;cmake&#39;</span><span class="p">,</span> <span class="n">ext</span><span class="o">.</span><span class="n">sourcedir</span><span class="p">]</span> <span class="o">+</span> <span class="n">cmake_args</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                              <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">build_temp</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">([</span><span class="s1">&#39;cmake&#39;</span><span class="p">,</span> <span class="s1">&#39;--build&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">build_args</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                              <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">build_temp</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Copy *_test file to tests directory</span>
+</span></span><span class="line"><span class="cl">        <span class="n">test_bin</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_temp</span><span class="p">,</span> <span class="s1">&#39;python_cpp_example_test&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">copy_test_file</span><span class="p">(</span><span class="n">test_bin</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">()</span> <span class="c1"># Add empty line for nicer output</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">copy_test_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src_file</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span> 
+</span></span></code></pre></div><p>Upon building the extension module, Python&rsquo;s setuptools will also now copy <code>python_cpp_example_test</code> into the <code>tests/bin</code> directory. Next we&rsquo;ll add another Python unit test under the <code>tests</code> directory.</p>
+<p><code>test_cpp.py</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">unittest</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">subprocess</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">MainTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">test_cpp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;</span><span class="se">\n\n</span><span class="s2">Testing C++ code...&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span> <span class="s1">&#39;bin&#39;</span><span class="p">,</span> <span class="s1">&#39;python_cpp_example_test&#39;</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">()</span>  <span class="c1"># for prettier output</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+</span></span></code></pre></div><p>And now, the moment we&rsquo;ve been waiting for: a single command to build and test a hybrid Python/C++ package.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">&gt; python3 setup.py <span class="nb">test</span>
+</span></span><span class="line"><span class="cl">...
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">test_cpp <span class="o">(</span>tests.cpp_test.MainTest<span class="o">)</span> ... 
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Testing C++ code...
+</span></span><span class="line"><span class="cl"><span class="o">===============================================================================</span>
+</span></span><span class="line"><span class="cl">All tests passed <span class="o">(</span><span class="m">2</span> assertions in <span class="m">1</span> <span class="nb">test</span> <span class="k">case</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Resuming Python tests...
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">ok
+</span></span><span class="line"><span class="cl">test_add <span class="o">(</span>tests.math_test.MainTest<span class="o">)</span> ... ok
+</span></span><span class="line"><span class="cl">test_subtract <span class="o">(</span>tests.math_test.MainTest<span class="o">)</span> ... ok
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">----------------------------------------------------------------------
+</span></span><span class="line"><span class="cl">Ran <span class="m">3</span> tests in 0.006s
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">OK
+</span></span></code></pre></div><p>Under the hood, the above command is first building any extension modules, executing Python unit tests, and then executing C++ unit tests.</p>
+<h3 id="final-thoughts-why-test-both-python-and-c">Final thoughts: why test both Python and C++?</h3>
+<p>In this blog post, I&rsquo;ve described how to structure a Python package with a C++ extension module where both the Python bindings and the C++ code are tested independently. I have a large project structured this way, with a set of Python tests and a set C++ tests. While the structure described in this post is less fragile than the previous set up, I&rsquo;m wondering whether it&rsquo;s worthwhile to test both codebases in the same repository. I think it comes down to asking two questions,</p>
+<ol>
+<li>Will my users only interact with my software via the Python interface?</li>
+<li>Should my C++ code be available as an independent library?</li>
+</ol>
+<p>If your answer to the first question is yes, then just write Python tests. <code>Pybind11</code> has its own suite of tests, so trust that the binding library will work as expected. Python is much quicker to write and easier to maintain.</p>
+<p>If your C++ code will be available as an independent library, then break out the C++ code into its own Github repository. Write C++ tests within that repository. Document, test, and maintain that library independently of your Python bindings. For your Python bindings, write a minimal set of tests. Or you could write no tests for the bindings at all. Again, <code>pybind11</code> has its own tests, and there are tools that will even <a href="https://github.com/RosettaCommons/binder">autogenerate python bindings from C++ code</a>. Leave it to the <code>pybind11</code> developers to test their binding library.</p>
+<p>So in conclusion, while I&rsquo;ve presented a structure here that is more maintainable than the structure described in my previous post, I&rsquo;m not convinced that the original motivation for this series of posts make sense. Namely, I question that Python code and C++ code should be tested independently. If these codebases truly need to be tested independently, then they should be developed and maintained independently in separate repositories. Conversely, if you only expect your users to interact with your software via Python, then just test the Python interface. More tests are not always better.</p>
+</article>
+
+        </main><footer id="footer">
+    Copyright © 2023 Benjamin Jack
+</footer>
+</body>
+</html>
