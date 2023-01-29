@@ -7,7 +7,7 @@ pygmentsCodeFences = true
 pygmentsUseClasses = true
 
 [params]
-  description = "Your site description"
+  description = "Personal musings about life and data"
   copyright = "Copyright © 2023 Benjamin Jack"
   dark = "auto"
   highlight = true
