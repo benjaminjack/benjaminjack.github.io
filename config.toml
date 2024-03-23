@@ -8,7 +8,7 @@ pygmentsUseClasses = true
 
 [params]
   description = "Personal musings about life and data"
-  copyright = "Copyright © 2023 Benjamin Jack"
+  copyright = "Copyright © 2024 Benjamin Jack"
   dark = "auto"
   highlight = true
 
